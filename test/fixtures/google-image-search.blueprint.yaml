@@ -1,0 +1,32 @@
+version: "1"
+blueprint:
+  name: "Google Image Search"
+  args: 
+    query: {}
+  simulation:
+    config:
+      orderScreenshots: true
+    actions:
+      - name: "Go To Search Page"
+        commands:  
+          - goto: "https://www.google.com"
+          - screenshot: "homepage.png"
+          - waitForNetworkIdle: {}
+      - name: "Search For {{query}}"
+        commands:
+          - $: 
+              selector: "input[name=q]"
+              saveAs: "searchBox"
+          - type: "{{query}} -> searchBox"
+          - screenshot: "type.png"
+          - press: "Enter -> searchBox"
+          - wait: 5000
+          - screenshot: "results.png"
+      - name: "Search For {{query}} Images"
+        commands:
+          - waitFor: 
+              selector: "xpath///a[contains(text(), 'Images')]"
+              saveAs: "imagesTab"
+          - click: "imagesTab"
+          - wait: 5000
+          - screenshot: "images.png"    

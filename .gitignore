@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+
+# IDE
+/.idea
+/.awcache
+/.vscode
+
+# misc
+npm-debug.log
+
+# example
+/quick-start
+
+# tests
+/coverage
+/.nyc_output
+
+# dist
+/dist
+
+# configuration
+/resources/rec14-data-creation.json
+.env
+
+# temp
+/tmp
+.DS_Store

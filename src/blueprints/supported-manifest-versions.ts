@@ -1,0 +1,1 @@
+export const supportedManifestVersions: string[] = ['1'];

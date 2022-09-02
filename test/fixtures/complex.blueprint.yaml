@@ -1,0 +1,114 @@
+version: "1"
+blueprint: 
+  name: "Complex Blueprint"
+  args:
+    url: {}
+    username: {}
+    password: {}
+  simulation:
+    type: "puppeteer"
+    config:
+      actionWait: 10
+      commandWait: 2
+    actions:
+      - name: "Action 1"
+        commands:
+          - goto: "http://path/to/url/"
+          - newPage: 
+          - goto: "{{url}}"
+      - name: "Action 2"
+        commands:
+          - click: "#navLoginButton"
+          - type:
+              selector:
+                root: "#bluePill"
+                selector: "//input[@class=\"zionTextBox\" and contains(@id, \"grvPRArchitect_form\")]"
+              text: "$args.username"
+          - type: "$args.password -> .login.form.password.field"
+          - click:
+              selector: ".login.submit"
+            profiles:
+              - "serviceb"
+      - name: "Action 3"
+        commands:
+          - frame: "Frame1"
+          - clear: "#neoElement"
+          - setWindowSize: "2560x1440"
+          - hover: 
+              selector: "2"
+          - frame: 0
+      - name: "Action 4"
+      - name: "Action 5"
+        commands:
+          - find: "#trinityElement"
+          - import: 'test'
+          - $:
+              saveAs: "bulldozer"
+              root: "Nebuchadnezzar"
+              selector: "//reality/brothers/tank"
+          - setWindowSize:
+              width: 1920
+              height: 1080
+      - name: "Action 6"
+        commands:
+          - import: 'test2@1-2,3,11,10-199'
+          - import:
+              name: 'Dummy Data'
+              ranges: 
+                - from: 1
+                  to: 3
+                - from: 2
+                  to: 3
+  script:
+    assertions:
+      - name: "Find 'UKG Pro' on landing page"
+        text: "UKG Pro"
+    files:
+      - name: "Users"
+        sourcePath: "Calendar_Users.dat"
+        targetPath: "Calendar_Users.dat"
+    parameters: 
+      - name: "Username"
+        replace: "$params.username"
+        file: "Users"
+      - name: "Password"
+        replace: "$params.password"
+        file: "Users"
+    # correlations:
+    #   - name: "C_XSRF_TOKEN"
+    #     boundary:
+    #       left: "XSRF_TOKEN="
+    #       right: "\n"
+    #     search: "headers"
+    #   - import: "xsrf-token.correlation.yml"
+  profiles:
+    calendar:
+      args: 
+        username: "usa-canu"
+        password: "password"
+      simulation:
+        config:
+          commandWait: 5
+    gsdb: 
+      args:
+        username: "roafs"
+        password: "password"
+      simulation:
+        config:
+          actionPrefix: "GSDB_"
+      script:
+        assertions:
+          - name: "Find 'UKG Pro' on landing page"
+            text: "UKG Pro"
+        files:
+          - name: "Users"
+            sourcePath: "Calendar_Users.dat"
+            targetPath: "Users.dat"
+    serviceb:
+      args:
+        username: "papag"
+        password: "password"
+      simulation:
+        config:
+          actionPrefix: "ServiceB_"
+          actionWait: 10

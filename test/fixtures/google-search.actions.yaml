@@ -1,0 +1,7 @@
+actions:
+  - name: "Google Search"
+    args: 
+      - "query"
+    commands:  
+      - type: "$args.query -> input[name=q]"
+      - press: "Enter -> input[name=q]"      
