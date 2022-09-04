@@ -354,3 +354,22 @@ export class BlueprintFocusCommand {
 export class BlueprintMainFrameCommand {
 
 }
+
+export class BlueprintEvaluateHandleCommand {
+    @IsString()
+    pageFunction: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    root?: string;
+
+    @IsString()
+    @IsNotEmpty()
+    @IsOptional()
+    saveAs?: string;
+
+    constructor(pageFunction: string) {
+        this.pageFunction = pageFunction;
+    }
+}

@@ -1,8 +1,3 @@
-export interface SimulationOptionsArg {
-    name: string;
-    value?: string;
-}
-
 export interface SimulationOptionsFile {
     name: string;
     sourcePath: string;
@@ -15,7 +10,6 @@ export interface SimulationOptionsWindowSize {
 }
 
 export interface SimulationOptions {
-    args?: SimulationOptionsArg[];
     profile?: string;
     outputDir?: string;
     headless?: boolean;

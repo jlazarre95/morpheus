@@ -2,8 +2,7 @@
 
 ## Phase 1
 
-- replace numbers with args (move arg evalulation to load/parse)
-- shadowRoot
+- test shadowRoot
 - script generation
 - cli
 
@@ -18,3 +17,6 @@
 - maintain consistency between simulation config (CLI vs blueprint)
 - implement waitForResponse
 - set window size of child windows / new pages?
+- saveAll for saving all elements
+- takeScreenshots config
+- check for non elements in evaluateHandle

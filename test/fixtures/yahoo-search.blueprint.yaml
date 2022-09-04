@@ -1,0 +1,24 @@
+version: "1"
+blueprint:
+  name: "Yahoo Search"
+  args: 
+    query: {}
+  simulation:
+    config:
+      orderScreenshots: true
+    actions:
+      - name: "Go To Search Page"
+        commands:  
+          - goto: "https://www.yahoo.com"
+          - waitForNetworkIdle: {}
+          - screenshot: "homepage.png"
+      - name: "Search For {{query}}"
+        commands:
+          - evaluateHandle: 
+              pageFunction: "document.getElementById('ybar-sbq')"
+              saveAs: "searchBox"
+          - type: "{{query}} -> searchBox"
+          - screenshot: "type.png"
+          - press: "Enter -> searchBox"
+          - wait: 5000
+          - screenshot: "results.png"

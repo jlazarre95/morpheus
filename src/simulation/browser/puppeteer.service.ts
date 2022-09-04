@@ -3,17 +3,18 @@ import * as Puppeteer from "puppeteer";
 import PuppeteerHar from "puppeteer-har";
 import { errors } from "puppeteer";
 import { ElementNotFoundError } from "./element-not-found.error";
+import { sleep } from "../../util/async.util";
 
 export interface PuppeteerWebElement extends WebElement {
     handle: Puppeteer.ElementHandle<Element>;
 }
 
-export class PuppeteerElementNotFoundError extends ElementNotFoundError {
-    constructor(selector: string, root?: PuppeteerWebElement) {
-        super(selector.indexOf('xpath/') === 0 ? `Element not found: (xpath='${selector.substring(6)}', root='${root}')` : `Element not found: (selector='${selector}', root='${root}')`);
-        Object.setPrototypeOf(this, PuppeteerElementNotFoundError.prototype);
-    }
-}
+// export class PuppeteerElementNotFoundError extends ElementNotFoundError {
+//     constructor(selector: string, root?: PuppeteerWebElement) {
+//         super(selector.indexOf('xpath/') === 0 ? `Element not found: (xpath='${selector.substring(6)}', root='${root?.handle.toString()}')` : `Element not found: (selector='${selector}', root='${root?.handle.toString()}')`);
+//         Object.setPrototypeOf(this, PuppeteerElementNotFoundError.prototype);
+//     }
+// }
 
 export class PuppeteerService implements BrowserService {
 
@@ -96,11 +97,11 @@ export class PuppeteerService implements BrowserService {
             handle = root ? await root.handle.waitForSelector(selector, options) : await this.target.waitForSelector(selector, options);
         } catch(e) {
             if(e instanceof errors.TimeoutError) {
-                throw new PuppeteerElementNotFoundError(selector, root);
+                throw new ElementNotFoundError(`Element not found: (selector='${selector}', root='${root?.handle.toString()}')`);
             }
         }
         if(!handle) {
-            throw new PuppeteerElementNotFoundError(selector, root);
+            throw new ElementNotFoundError(`Element not found: (selector='${selector}', root='${root?.handle.toString()}')`);
         }
         return { handle: handle };
     }
@@ -121,6 +122,47 @@ export class PuppeteerService implements BrowserService {
         await this.getPage().close();
     }
 
+    private async handleContainsElement(handle: Puppeteer.JSHandle<any>): Promise<boolean> {
+        try {
+            return !!await handle.jsonValue();
+        } catch(err: any) {
+            if(err.message?.toLowerCase().indexOf('could not serialize referenced object') >= 0)  {
+                return true;
+            }
+            throw err;
+        }
+    }
+
+    private async isJsonValue(handle: Puppeteer.JSHandle<any>): Promise<boolean> {
+        try {
+            return !!await handle.jsonValue();
+        } catch(err: any) {
+            if(err.message?.toLowerCase().indexOf('could not serialize referenced object') >= 0)  {
+                return false;
+            }
+            throw err;
+        }    
+    }
+
+    async evaluateHandle(pageFunction: string, root?: PuppeteerWebElement): Promise<PuppeteerWebElement> {
+        const handle = root ? await root.handle.evaluateHandle(pageFunction) : await this.getPage().evaluateHandle(pageFunction);
+        if(!handle || !await this.handleContainsElement(handle)) {
+            throw new ElementNotFoundError(`Element not found: (pageFunction='${pageFunction}', root='${root?.handle.toString()}')`);
+        }
+        if(await this.isJsonValue(handle)) {
+            const elem = handle.asElement();
+            if(elem) {
+                return { handle: elem as Puppeteer.ElementHandle<Element> }
+            }
+            return { handle: ((await handle.getProperties()).values().next()).value as Puppeteer.ElementHandle<Element> };
+        } 
+        let nextProp = (await handle.getProperties()).values().next();
+        if(nextProp) {
+            return { handle: nextProp.value as Puppeteer.ElementHandle<Element> };
+        }
+        throw new ElementNotFoundError(`Element not found: (pageFunction='${pageFunction}', root='${root?.handle.toString()}')`);
+    }
+
     async goTo(url: string): Promise<void> {
         await this.target.goto(url);
     }
@@ -128,7 +170,7 @@ export class PuppeteerService implements BrowserService {
     async findElementBySelector(selector: string, root?: PuppeteerWebElement): Promise<PuppeteerWebElement> {
         const handle = root ? await root.handle.$(selector) : await this.target.$(selector);
         if(!handle) {
-            throw new PuppeteerElementNotFoundError(selector, root);
+            throw new ElementNotFoundError(`Element not found: (selector='${selector}', root='${root?.handle.toString()}')`);
         }
         return { handle: handle };
     }

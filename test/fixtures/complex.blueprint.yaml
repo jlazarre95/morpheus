@@ -3,8 +3,10 @@ blueprint:
   name: "Complex Blueprint"
   args:
     url: {}
-    username: {}
-    password: {}
+    company: "{{username}}'s Company'"
+    username: "johndoe01"
+    password: "{{username}}-Password$1"
+    waitTime: 2000
   simulation:
     type: "puppeteer"
     config:
@@ -13,6 +15,7 @@ blueprint:
     actions:
       - name: "Action 1"
         commands:
+          - wait: "{{waitTime}}"
           - goto: "http://path/to/url/"
           - newPage: 
           - goto: "{{url}}"
@@ -23,8 +26,8 @@ blueprint:
               selector:
                 root: "#bluePill"
                 selector: "//input[@class=\"zionTextBox\" and contains(@id, \"grvPRArchitect_form\")]"
-              text: "$args.username"
-          - type: "$args.password -> .login.form.password.field"
+              text: "{{username}}"
+          - type: "{{password}} -> .login.form.password.field"
           - click:
               selector: ".login.submit"
             profiles:
@@ -69,10 +72,10 @@ blueprint:
         targetPath: "Calendar_Users.dat"
     parameters: 
       - name: "Username"
-        replace: "$params.username"
+        replace: "{{username}}"
         file: "Users"
       - name: "Password"
-        replace: "$params.password"
+        replace: "{{password}}"
         file: "Users"
     # correlations:
     #   - name: "C_XSRF_TOKEN"

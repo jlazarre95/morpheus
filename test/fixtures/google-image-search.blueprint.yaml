@@ -3,6 +3,7 @@ blueprint:
   name: "Google Image Search"
   args: 
     query: {}
+    waitTime: 5000
   simulation:
     config:
       orderScreenshots: true
@@ -10,17 +11,21 @@ blueprint:
       - name: "Go To Search Page"
         commands:  
           - goto: "https://www.google.com"
-          - screenshot: "homepage.png"
           - waitForNetworkIdle: {}
+          - screenshot: "homepage.png"
       - name: "Search For {{query}}"
         commands:
-          - $: 
-              selector: "input[name=q]"
+          - evaluateHandle: 
+              pageFunction: "document.getElementsByName('q')"
               saveAs: "searchBox"
+          - $: 
+              selector: "input[name=btnK]"
+              saveAs: "searchButton"
           - type: "{{query}} -> searchBox"
+          - wait: 1000
           - screenshot: "type.png"
           - press: "Enter -> searchBox"
-          - wait: 5000
+          - wait: "{{waitTime}}"
           - screenshot: "results.png"
       - name: "Search For {{query}} Images"
         commands:
@@ -28,5 +33,5 @@ blueprint:
               selector: "xpath///a[contains(text(), 'Images')]"
               saveAs: "imagesTab"
           - click: "imagesTab"
-          - wait: 5000
-          - screenshot: "images.png"    
+          - wait: "{{waitTime}}"
+          - screenshot: "images.png"

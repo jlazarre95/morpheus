@@ -3,11 +3,10 @@ import { mkdirp, rm, writeFile } from "fs-extra";
 import moment from 'moment';
 import { join, resolve } from "path";
 import * as V1 from "../blueprints/v1";
-import { argsToDict, BlueprintAction, BlueprintCommand, BlueprintManifest, CommandName, ConditionEvaluator, evaluateArgs } from "../blueprints/v1";
+import { BlueprintAction, BlueprintCommand, BlueprintManifest, CommandName, ConditionEvaluator } from "../blueprints/v1";
 import { ElementFinder } from "../blueprints/v1/element-finder";
-import { Dict } from "../types/dict";
 import { BrowserServiceFactory } from "./browser/browser-service-factory";
-import { BrowserService, LaunchOptionsWindowSize, WebElement } from "./browser/browser.service";
+import { BrowserService, LaunchOptionsWindowSize } from "./browser/browser.service";
 import { CommandProcessor } from "./commands/command-processor";
 import { RecordedActions } from "./recorded-action";
 import { SimulationOptions } from "./simulation-options";
@@ -30,11 +29,8 @@ export class SimulationService {
     }
 
     async simulate(manifest: V1.BlueprintManifest, options: SimulationOptions = {}) {
-        const args: Dict<string | undefined> = argsToDict(manifest.blueprint.args, options.args);
-        manifest = await evaluateArgs(manifest, args);
-
+        // const args: Dict<string | undefined> = getArgs(manifest, options.args);
         const browser: BrowserService = this.getCommandService(manifest);
-
         const finder: ElementFinder = new ElementFinder(browser);
         const processor: CommandProcessor = new CommandProcessor(browser, finder);
         const evaluator: V1.ConditionEvaluator = new V1.ConditionEvaluator(finder);
@@ -132,6 +128,9 @@ export class SimulationService {
                 break;
             case CommandName.closePage:
                 await processor.closePage();
+                break;
+            case CommandName.evaluateHandle:
+                await processor.evaluateHandle(command.evaluateHandle!.pageFunction, command.evaluateHandle!.root, command.evaluateHandle!.saveAs);
                 break;
             case CommandName.find:
                 await processor.find(command.find!.selector, command.find!.root, command.find!.saveAs);

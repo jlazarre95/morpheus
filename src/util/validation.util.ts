@@ -1,4 +1,5 @@
-import { isPositive, ValidationError } from "class-validator";
+import { isPositive, ValidationError, ValidatorOptions, validate } from "class-validator";
+import { createBlueprint } from "../blueprints";
 
 export namespace Ensure {
 
@@ -75,3 +76,9 @@ export function getValidationErrorMessage(errors: ValidationError[], options: IV
     return message;
 }
 
+export async function validateInstance(object: object, validatorOptions?: ValidatorOptions | undefined) {
+    const errors = await validate(object, validatorOptions);
+    if(errors.length > 0) {
+        throw new Error(getValidationErrorMessage(errors));
+    }
+}

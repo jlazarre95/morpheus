@@ -6,8 +6,10 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc -w",
-    "start": "node dist/src/index.js",
-    "test": "mocha --config .mocharc.yaml"
+    "start": "ts-node dist/src/index.js",
+    "start:debug": "ts-node --inspect-brk dist/src/index.js",
+    "test": "mocha --config .mocharc.yaml",
+    "test:debug": "mocha --inspect-brk --config .mocharc.yaml"
   },
   "keywords": [],
   "author": "",

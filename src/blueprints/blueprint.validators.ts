@@ -1,6 +1,6 @@
 import { Transform, Type } from "class-transformer";
 import { IsNumber, Min, IsOptional, IsString, ValidateNested } from "class-validator";
-import { BlueprintSelector, BlueprintXPath } from "./v1";
+import { BlueprintSelector, BlueprintXPath, transformToBlueprintArguments } from "./v1";
 
 export function IsWaitForTimeout() {
     return function (target: any, propertyKey: string) {
@@ -33,6 +33,42 @@ export function IsBlueprintXPath() {
         Transform(({ value }) => typeof value === 'string' ? new BlueprintXPath(value) : value)(target, propertyKey);
     };
 }
+
+export function TransformToInt() {
+    return function (target: any, propertyKey: string) {
+        Transform(({ value }) => typeof value === 'string' && isInt(value) ? parseInt(value) : value)(target, propertyKey);
+    };
+}
+
+export function TransformToFloat() {
+    return function (target: any, propertyKey: string) {
+        Transform(({ value }) => typeof value === 'string' && isFloat(value) ? parseFloat(value) : value)(target, propertyKey);
+    };
+}
+
+export function TransformToArgs() {
+    return function (target: any, propertyKey: string) {
+        Transform(({ value }) => transformToBlueprintArguments(value))(target, propertyKey);
+    };
+}
+function isInt(value: string): boolean {
+    try {
+        parseInt(value);
+        return true;
+    } catch(err) {
+        return false;
+    }
+}
+
+function isFloat(value: string): boolean {
+    try {
+        parseFloat(value);
+        return true;
+    } catch(err) {
+        return false;
+    }
+}
+
 
 // export function IsWaitForSelectorOptionsVisible() {
 //     return function (target: any, propertyKey: string) {

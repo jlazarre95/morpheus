@@ -1,5 +1,5 @@
 import { suite, test, timeout } from "@testdeck/mocha";
-import { load } from "../blueprints";
+import { createBlueprint, loadBlueprintFile } from "../blueprints";
 import * as V1 from "../blueprints/v1";
 import { BrowserServiceFactory } from "./browser/browser-service-factory";
 import { SimulationService } from "./simulation.service";
@@ -8,6 +8,7 @@ import { SimulationService } from "./simulation.service";
 export class SimulationServiceTest {
 
     simulationService: SimulationService;
+    readonly headless: boolean = false;
 
     before() {
         this.simulationService = new SimulationService(new BrowserServiceFactory());
@@ -15,9 +16,18 @@ export class SimulationServiceTest {
 
     @test
     @timeout(60_000)
-    async testSimulate() {
-        const manifest: V1.BlueprintManifest = await load('test/fixtures/google-image-search.blueprint.yaml', '1');
-        await this.simulationService.simulate(manifest, { headless: true, windowSize: { width: 1280, height: 720 }, outputDir: 'tmp', args: [ { name: "query", value: "dogs" }], profile: "test" });
+    async testSimulateGoogleImageSearch() {
+        const manifestObj: any = await loadBlueprintFile('test/fixtures/google-image-search.blueprint.yaml');
+        const manifest: V1.BlueprintManifest = await createBlueprint(manifestObj, '1', { args: { query: { value: "cats" } } });
+        await this.simulationService.simulate(manifest, { headless: this.headless, windowSize: { width: 1280, height: 720 }, outputDir: 'tmp/google', profile: "test" });
+    }
+
+    @test
+    @timeout(60_000)
+    async testSimulateYahooSearch() {
+        const manifestObj: any = await loadBlueprintFile('test/fixtures/yahoo-search.blueprint.yaml');
+        const manifest: V1.BlueprintManifest = await createBlueprint(manifestObj, '1', { args: { query: { value: "dogs" } } });
+        await this.simulationService.simulate(manifest, { headless: this.headless, windowSize: { width: 1280, height: 720 }, outputDir: 'tmp/yahoo', profile: "test" });
     }
 
 }

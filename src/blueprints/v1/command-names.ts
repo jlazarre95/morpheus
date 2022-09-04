@@ -4,6 +4,7 @@ export enum CommandName {
     click = 'click',
     close = 'close',
     closePage = 'closePage',
+    evaluateHandle = 'evaluateHandle',
     find = 'find',
     focus = 'focus',
     goBack = 'goBack', // TODO: support string

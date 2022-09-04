@@ -22,6 +22,7 @@ export interface BrowserService {
     click(element: WebElement): Promise<void>;
     close(): Promise<void>;
     closePage(): Promise<void>;
+    evaluateHandle(pageFunction: string, root?: WebElement): Promise<WebElement>;
     findElementBySelector(selector: string, root?: WebElement): Promise<WebElement>;
     focus(element: WebElement): Promise<void>;
     goBack(timeout?: number, waitUntil?: WaitUntilState[]): Promise<void>;

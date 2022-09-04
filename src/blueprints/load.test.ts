@@ -1,5 +1,5 @@
 import { suite, test } from "@testdeck/mocha";
-import { load } from "./load";
+import { createBlueprint, loadBlueprintFile } from "./load";
 import * as V1 from "./v1";
 
 @suite
@@ -7,14 +7,25 @@ export class loadTests {
 
     @test
     async canLoadSimpleBlueprint() {
-        const manifest: V1.BlueprintManifest = await load('test/fixtures/simple.blueprint.yaml', '1');
+        const manifestObj: any = await loadBlueprintFile('test/fixtures/simple.blueprint.yaml');
+        const manifest: V1.BlueprintManifest = await createBlueprint(manifestObj, '1');
         // console.log(JSON.stringify(manifest, null, 4));
     }
 
     @test
     async canLoadComplexBlueprint() {
-        const manifest: V1.BlueprintManifest = await load('test/fixtures/complex.blueprint.yaml', '1');
+        const manifestObj: any = await loadBlueprintFile('test/fixtures/complex.blueprint.yaml');
+        const manifest: V1.BlueprintManifest = await createBlueprint(manifestObj, '1',
+            {
+                args: {
+                    url: { value: "https://www.google.com" },
+                    // username: { value: "johndoe01" },
+                    // password: { value: "password$1" },
+                }
+            }
+        );
+        // console.log(manifest.blueprint.args!);
         // console.log(JSON.stringify(manifest, null, 4));
-    }   
+    }
 
 }

@@ -29,6 +29,14 @@ export class CommandProcessor {
         await this.browser.closePage();
     }
 
+    async evaluateHandle(pageFunction: string, root?: string, saveAs?: string) {
+        const rootElem: WebElement | undefined = root ? await this.elementFinder.find(root, undefined, true) : undefined;
+        const e: WebElement = await this.browser.evaluateHandle(pageFunction, rootElem);
+        if(saveAs) {
+            await this.elementFinder.save(saveAs, e);
+        }
+    }
+
     async find(selector: string, root?: string, saveAs?: string) {
         const e: WebElement = await this.elementFinder.find(selector, root);
         if(saveAs) {
