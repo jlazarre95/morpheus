@@ -1,6 +1,6 @@
 import { isDefined } from "class-validator";
 import { BlueprintSimulationCondition, SimulationConditionName } from ".";
-import { ElementFinder } from "./element-finder";
+import { ElementFinder } from "../simulation/element-finder";
 
 export class ConditionEvaluator {
 

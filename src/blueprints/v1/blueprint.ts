@@ -1,16 +1,11 @@
 import { Exclude, Transform, Type } from "class-transformer";
 import { ArrayMinSize, IsBoolean, isDefined, IsIn, IsInstance, isNotEmpty, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from "class-validator";
-import { IsDefinedOr } from "../../util/is-defined-or.validator";
-import { IsDefinedXor } from "../../util/is-defined-xor.validator";
-import { IsGte } from "../../util/is-gte.validator";
-import { IsOfType } from "../../util/is-of-type.validator";
-import { IsOrdinal } from "../../util/is-ordinal.validator";
-import { IsTypeOf } from "../../util/is-type-of.validator";
-import { Ensure } from "../../util/validation.util";
-import { IsBlueprintSelector, TransformToArgs, TransformToInt } from "../blueprint.validators";
+import { IsTypeOf } from "../../validation/is-type-of.validator";
+import { IsBlueprintSelector, TransformToArgs, TransformToInt } from "./blueprint.validators";
 import { BlueprintClearCommand, BlueprintClickCommand, BlueprintCloseCommand, BlueprintClosePageCommand, BlueprintEvaluateHandleCommand, BlueprintFindCommand, BlueprintFocusCommand, BlueprintGoBackCommand, BlueprintGoForwardCommand, BlueprintGoToCommand, BlueprintHoverCommand, BlueprintImportCommand, BlueprintLogCommand, BlueprintMainFrameCommand, BlueprintNewPageCommand, BlueprintPressCommand, BlueprintReloadCommand, BlueprintScreenshotCommand, BlueprintSetGeoLocationCommand, BlueprintSetUserAgentCommand, BlueprintSetWindowSizeCommand, BlueprintTapCommand, BlueprintTypeCommand, BlueprintWaitForCommand, BlueprintWaitForFrameCommand, BlueprintWaitForNavigationCommand, BlueprintWaitForNetworkIdleCommand, BlueprintWaitForSelectorOptions } from "./blueprint-commands";
 import { getBlueprintSelector, transformToBlueprintArguments } from "./blueprint.util";
 import { CommandName } from "./command-names";
+import { IsDefinedXor, IsDefinedOr, IsOrdinal, IsGte, IsOfType, Ensure } from "../../validation";
 
 export class BlueprintSelector {
     @IsString()
@@ -241,6 +236,22 @@ export class BlueprintParameter {
     @IsNotEmpty()
     @IsOptional()
     column?: string;
+
+    constructor(name: string, replace: string) {
+        this.name = name;
+        this.replace = replace;
+    }
+
+    static fromShorthand(cmd: string): BlueprintParameter {
+        if (cmd.indexOf('->') < 0) {
+            throw new Error(`Parameter shorthand must contain: '->'`);
+        } 
+        const tokens: string[] = cmd.split('->');
+        for (let i = 0; i < tokens.length; i++) {
+            tokens[i] = tokens[i].trim();
+        }
+        return new BlueprintParameter(tokens[1], tokens[0]);
+    }
 }
 
 export class BlueprintFile {

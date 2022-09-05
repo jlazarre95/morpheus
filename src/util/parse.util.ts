@@ -1,4 +1,4 @@
-import { Ensure } from "./validation.util";
+import { Ensure } from "../validation";
 
 export function stringsToRanges(ranges: string[]): { from: number, to: number }[] {
     const arr: { from: number, to: number }[] = [];

@@ -1,9 +1,9 @@
 import { mkdirp } from "fs-extra";
 import { join } from "path";
-import { BlueprintImportRange } from "../../blueprints";
-import { ElementFinder } from "../../blueprints/v1/element-finder";
+import { ElementFinder } from "./element-finder";
 import { sleep } from "../../util/async.util";
-import { BrowserService, WaitUntilState, WebElement } from "../browser/browser.service";
+import { BrowserService, WaitUntilState, WebElement } from "./browser/browser.service";
+import { BlueprintImportRange } from "../v1";
 
 export class CommandProcessor {
     

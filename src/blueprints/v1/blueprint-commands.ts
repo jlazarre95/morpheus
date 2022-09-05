@@ -1,9 +1,9 @@
 import { Transform, Type } from "class-transformer";
 import { ArrayMinSize, IsBoolean, IsNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from "class-validator";
 import { BlueprintImportRange, BlueprintSelector } from ".";
-import { PressableKey, WaitUntilState } from "../../simulation/browser/browser.service";
+import { PressableKey, WaitUntilState } from "../simulation/browser/browser.service";
 import { stringsToRanges } from "../../util/parse.util";
-import { IsBlueprintSelector, IsWaitForTimeout, IsWaitForWaitUntil } from "../blueprint.validators";
+import { IsBlueprintSelector, IsWaitForTimeout, IsWaitForWaitUntil } from "./blueprint.validators";
 import { getBlueprintSelector } from "./blueprint.util";
 
 export class BlueprintSetWindowSizeCommand {

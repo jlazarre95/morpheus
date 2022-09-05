@@ -1,5 +1,5 @@
 import * as V1 from "./blueprints/v1";
-import { SimulationService } from "./simulation/simulation.service";
+import { SimulationService } from "./blueprints/simulation/simulation.service";
 
 export async function main() {
 

@@ -3,7 +3,7 @@ import * as Puppeteer from "puppeteer";
 import PuppeteerHar from "puppeteer-har";
 import { errors } from "puppeteer";
 import { ElementNotFoundError } from "./element-not-found.error";
-import { sleep } from "../../util/async.util";
+import { sleep } from "../../../util/async.util";
 
 export interface PuppeteerWebElement extends WebElement {
     handle: Puppeteer.ElementHandle<Element>;

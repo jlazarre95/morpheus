@@ -2,12 +2,11 @@ import { isDefined } from "class-validator";
 import { mkdirp, rm, writeFile } from "fs-extra";
 import moment from 'moment';
 import { join, resolve } from "path";
-import * as V1 from "../blueprints/v1";
-import { BlueprintAction, BlueprintCommand, BlueprintManifest, CommandName, ConditionEvaluator } from "../blueprints/v1";
-import { ElementFinder } from "../blueprints/v1/element-finder";
+import { BlueprintAction, BlueprintCommand, BlueprintManifest, CommandName, ConditionEvaluator } from "../v1";
 import { BrowserServiceFactory } from "./browser/browser-service-factory";
 import { BrowserService, LaunchOptionsWindowSize } from "./browser/browser.service";
-import { CommandProcessor } from "./commands/command-processor";
+import { CommandProcessor } from "./command-processor";
+import { ElementFinder } from "./element-finder";
 import { RecordedActions } from "./recorded-action";
 import { SimulationOptions } from "./simulation-options";
 import { getNumberOfScreenshotCommands, getScreenshotName } from "./simulation.util";
@@ -28,12 +27,12 @@ export class SimulationService {
 
     }
 
-    async simulate(manifest: V1.BlueprintManifest, options: SimulationOptions = {}) {
+    async simulate(manifest: BlueprintManifest, options: SimulationOptions = {}) {
         // const args: Dict<string | undefined> = getArgs(manifest, options.args);
         const browser: BrowserService = this.getCommandService(manifest);
         const finder: ElementFinder = new ElementFinder(browser);
         const processor: CommandProcessor = new CommandProcessor(browser, finder);
-        const evaluator: V1.ConditionEvaluator = new V1.ConditionEvaluator(finder);
+        const evaluator: ConditionEvaluator = new ConditionEvaluator(finder);
         const outputDir: string = options.outputDir || resolve('.');
 
         await rm(outputDir, { recursive: true, force: true });
@@ -60,7 +59,7 @@ export class SimulationService {
         console.log('\nDone!');
     }
 
-    private async executeActions(manifest: V1.BlueprintManifest, profile: string | undefined, outputDir: string, dependencies: { evaluator: ConditionEvaluator, processor: CommandProcessor }): Promise<RecordedActions> {
+    private async executeActions(manifest: BlueprintManifest, profile: string | undefined, outputDir: string, dependencies: { evaluator: ConditionEvaluator, processor: CommandProcessor }): Promise<RecordedActions> {
         const { evaluator, processor } = dependencies;
 
         const recordedActions: RecordedActions = { actions: [] };
@@ -226,7 +225,7 @@ export class SimulationService {
         }
     }
 
-    private printSimulationHeader(manifest: V1.BlueprintManifest, options?: SimulationOptions) {
+    private printSimulationHeader(manifest: BlueprintManifest, options?: SimulationOptions) {
         console.log(`${this.majorSep}Simulating ${manifest.blueprint.name}...${this.majorSep}`.toUpperCase());
         console.log(`Config: ${JSON.stringify(options)}`);
     }

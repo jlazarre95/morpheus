@@ -1,6 +1,6 @@
 import { suite, test, timeout } from "@testdeck/mocha";
-import { createBlueprint, loadBlueprintFile } from "../blueprints";
-import * as V1 from "../blueprints/v1";
+import { createBlueprint, loadBlueprintFile } from "..";
+import * as V1 from "../v1";
 import { BrowserServiceFactory } from "./browser/browser-service-factory";
 import { SimulationService } from "./simulation.service";
 

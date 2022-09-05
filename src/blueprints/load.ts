@@ -2,9 +2,9 @@ import { plainToInstance } from "class-transformer";
 import { isDefined } from "class-validator";
 import { readFile } from "fs-extra";
 import { parse as parseYaml } from "yaml";
-import { ArgValue } from "../simulation/args";
+import { ArgValue } from "./args/args";
 import { Dict } from "../types/dict";
-import { validateInstance } from "../util/validation.util";
+import { validateInstance } from "../validation/class-validator.util";
 import { supportedManifestVersions } from "./supported-manifest-versions";
 import * as V1 from "./v1";
 import { resolveBlueprint } from "./v1";
@@ -21,6 +21,8 @@ export async function loadBlueprintFile(path: string): Promise<any> {
 export async function copyBlueprint(manifest: V1.BlueprintManifest): Promise<V1.BlueprintManifest> {
     return createBlueprint(JSON.parse(JSON.stringify(manifest)), '1');
 }
+
+export function createBlueprint(obj: any, version: '1', options?: CreateManifestOptions): Promise<V1.BlueprintManifest>;
 
 export async function createBlueprint(obj: any, version: '1', options: CreateManifestOptions = {}): Promise<V1.BlueprintManifest> { 
     const resolve: boolean = isDefined(options.resolve) ? options.resolve! : true;

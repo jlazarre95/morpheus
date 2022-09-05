@@ -2,7 +2,7 @@
 
 ## Phase 1
 
-- test shadowRoot
+- testing?
 - script generation
 - cli
 
@@ -20,3 +20,4 @@
 - saveAll for saving all elements
 - takeScreenshots config
 - check for non elements in evaluateHandle
+- test shadowRoot (when there is a Pro environment)

@@ -1,5 +1,5 @@
-import { BrowserService, WebElement } from "../../simulation/browser/browser.service";
-import { ElementNotFoundError } from "../../simulation/browser/element-not-found.error";
+import { BrowserService, WebElement } from "./browser/browser.service";
+import { ElementNotFoundError } from "./browser/element-not-found.error";
 import { Dict } from "../../types/dict";
 
 export class ElementFinder {
