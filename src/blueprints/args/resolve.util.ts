@@ -44,6 +44,6 @@ export function validateArgsResolved(str: string) {
         errors.add(`Argument '${unresolved[0]}' could not be resolved because it was never defined. Please define the argument in the blueprint if you wish to use it.`);
     }
     if(errors.size != 0) {
-        throw new Error(setJoin(errors, ','));
+        throw new Error(setJoin(errors, '\n'));
     }
 }

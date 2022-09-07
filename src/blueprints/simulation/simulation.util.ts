@@ -1,4 +1,4 @@
-import * as V1 from "../v1";
+import * as V1 from "../models";
 
 export function getNumberOfScreenshotCommands(manifest: V1.BlueprintManifest): number {
     let screenshots: number = 0;

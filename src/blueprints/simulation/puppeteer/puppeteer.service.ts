@@ -1,8 +1,8 @@
-import { BrowserService, LaunchOptions, PressableKey, WaitUntilState, WebElement } from "./browser.service";
+import { BrowserService, LaunchOptions, PressableKey, WaitUntilState, WebElement } from "../browser/browser.service";
 import * as Puppeteer from "puppeteer";
 import PuppeteerHar from "puppeteer-har";
 import { errors } from "puppeteer";
-import { ElementNotFoundError } from "./element-not-found.error";
+import { ElementNotFoundError } from "../browser/element-not-found.error";
 import { sleep } from "../../../util/async.util";
 
 export interface PuppeteerWebElement extends WebElement {

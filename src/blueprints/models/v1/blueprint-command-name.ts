@@ -1,4 +1,4 @@
-export enum CommandName {
+export enum BlueprintV1CommandName {
     $ = '$',
     clear = 'clear',
     click = 'click',

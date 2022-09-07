@@ -1,0 +1,38 @@
+export enum BlueprintCommandName {
+    $ = '$',
+    clear = 'clear',
+    click = 'click',
+    close = 'close',
+    closePage = 'closePage',
+    evaluateHandle = 'evaluateHandle',
+    find = 'find',
+    focus = 'focus',
+    goBack = 'goBack', // TODO: support string
+    goForward = 'goForward', // TODO: support string
+    goto = 'goto', 
+    frame = 'frame',
+    hover = 'hover',
+    import = 'import', // TODO: implement
+    log = 'log',
+    mainFrame = 'mainFrame',
+    newPage = 'newPage',
+    press = 'press',
+    reload = 'reload',
+    screenshot = 'screenshot',
+    setCacheEnabled = 'setCacheEnabled',
+    setDefaultNavigationTimeout = 'setDefaultNavigationTimeout',
+    setDefaultTimeout = 'setDefaultTimeout',
+    setGeoLocation = 'setGeoLocation',
+    setJavascriptEnabled = 'setJavascriptEnabled',
+    setOfflineMode = 'setOfflineMode',
+    setUserAgent = 'setUserAgent',
+    setWindowSize = 'setWindowSize',
+    tap = 'tap',
+    type = 'type',
+    wait = 'wait',
+    waitForFrame = 'waitForFrame', 
+    waitForNavigation = 'waitForNavigation',
+    waitForNetworkIdle = 'waitForNetworkIdle',
+    waitFor = 'waitFor',
+    // title, url?
+}

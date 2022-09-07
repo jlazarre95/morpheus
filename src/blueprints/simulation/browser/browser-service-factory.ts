@@ -1,4 +1,4 @@
-import { PuppeteerService } from "./puppeteer.service";
+import { PuppeteerService } from "../puppeteer/puppeteer.service";
 
 export class BrowserServiceFactory {
 

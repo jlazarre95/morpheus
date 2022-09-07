@@ -9,7 +9,7 @@ export class ConditionEvaluator {
     }
 
     async evalCondition(condition: BlueprintSimulationCondition): Promise<boolean> {
-        const name: SimulationConditionName | undefined = condition.getCondition();
+        const name: SimulationConditionName | undefined = BlueprintSimulationCondition.getName(condition);
         if(!isDefined(name)) {
             return Promise.resolve(false);
         }

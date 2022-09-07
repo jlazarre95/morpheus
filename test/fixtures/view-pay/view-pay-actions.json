@@ -1,0 +1,44 @@
+{
+    "actions": [
+        {
+            "name": "VP_01_HitServer",
+            "date": "2019-01-16T19:52:52.455+0000",
+            "state": "start"
+        },
+        {
+            "name": "VP_01_HitServer",
+            "date": "2019-01-16T19:52:58.716+0000",
+            "state": "end"
+        },
+        {
+            "name": "VP_02_Login",
+            "date": "2019-01-16T19:52:58.855+0000",
+            "state": "start"
+        },
+        {
+            "name": "VP_02_Login",
+            "date": "2019-01-16T19:53:15.091+0000",
+            "state": "end"
+        },
+        {
+            "name": "VP_03_ViewPayCheck",
+            "date": "2019-01-16T19:53:25.269+0000",
+            "state": "start"
+        },
+        {
+            "name": "VP_03_ViewPayCheck",
+            "date": "2019-01-16T19:53:36.644+0000",
+            "state": "end"
+        },
+        {
+            "name": "VP_04_Logout",
+            "date": "2019-01-16T19:53:36.647+0000",
+            "state": "start"
+        },
+        {
+            "name": "VP_04_Logout",
+            "date": "2019-01-16T19:53:46.831+0000",
+            "state": "end"
+        }
+    ]
+}

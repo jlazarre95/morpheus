@@ -3,7 +3,7 @@ import { join } from "path";
 import { ElementFinder } from "./element-finder";
 import { sleep } from "../../util/async.util";
 import { BrowserService, WaitUntilState, WebElement } from "./browser/browser.service";
-import { BlueprintImportRange } from "../v1";
+import { BlueprintImportRange } from "../models";
 
 export class CommandProcessor {
     

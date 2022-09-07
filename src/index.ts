@@ -1,4 +1,4 @@
-import * as V1 from "./blueprints/v1";
+import * as V1 from "./blueprints/models";
 import { SimulationService } from "./blueprints/simulation/simulation.service";
 
 export async function main() {

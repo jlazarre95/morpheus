@@ -2,7 +2,7 @@ import { isDefined } from "class-validator";
 import { mkdirp, rm, writeFile } from "fs-extra";
 import moment from 'moment';
 import { join, resolve } from "path";
-import { BlueprintAction, BlueprintCommand, BlueprintManifest, CommandName, ConditionEvaluator } from "../v1";
+import { BlueprintAction, BlueprintCommand, BlueprintManifest, BlueprintCommandName, ConditionEvaluator } from "../models";
 import { BrowserServiceFactory } from "./browser/browser-service-factory";
 import { BrowserService, LaunchOptionsWindowSize } from "./browser/browser.service";
 import { CommandProcessor } from "./command-processor";
@@ -11,7 +11,7 @@ import { RecordedActions } from "./recorded-action";
 import { SimulationOptions } from "./simulation-options";
 import { getNumberOfScreenshotCommands, getScreenshotName } from "./simulation.util";
 
-interface CommandState {
+interface ScreenshotsState {
     totalScreenshots: number;
     screenshotNum: number;
     orderScreenshots: boolean;
@@ -46,7 +46,7 @@ export class SimulationService {
             await browser.launch({ headless: options.headless, windowSize: windowSize });
             await browser.startHar(join(outputDir, 'archive.har'));
             recordedActions = await this.executeActions(manifest, options.profile, outputDir, { evaluator, processor });
-        } finally {
+        }  finally {
             try {
                 await browser.stopHar();
                 if (recordedActions) {
@@ -62,17 +62,17 @@ export class SimulationService {
     private async executeActions(manifest: BlueprintManifest, profile: string | undefined, outputDir: string, dependencies: { evaluator: ConditionEvaluator, processor: CommandProcessor }): Promise<RecordedActions> {
         const { evaluator, processor } = dependencies;
 
-        const recordedActions: RecordedActions = { actions: [] };
-        let actionNum = 0;
-
-        const state: CommandState = {
+        const state: ScreenshotsState = {
             totalScreenshots: getNumberOfScreenshotCommands(manifest),
             orderScreenshots: manifest.blueprint.simulation?.config?.orderScreenshots || false,
             screenshotDir: join(outputDir, 'screenshots'),
             screenshotNum: 1,
         };
 
-        for (const action of manifest.blueprint.simulation?.actions || []) {
+        const recordedActions: RecordedActions = { actions: [] };
+        let actionNum = 0;
+        
+        for(const action of manifest.blueprint.simulation?.actions || []) {
             if (await this.skipAction(action, profile, evaluator)) {
                 continue;
             }
@@ -92,12 +92,15 @@ export class SimulationService {
                 console.log(`Executing command #${commandNum}: ${JSON.stringify(command)}`);
                 await processor.wait(command.waitBefore);
 
-                // Execute command
-                await this.executeCommand(command, state, { processor });
+                try {
+                    await this.executeCommand(command, state, { processor });
+                } catch(err: any) {
+                    await this.screenshot('before-error.png', state, { safe: true, processor });
+                    throw err;
+                }
 
                 const commandWaitAfter: number | undefined = isDefined(command.waitAfter) ? command.waitAfter : manifest.blueprint.simulation?.config?.commandWait;
                 await processor.wait(commandWaitAfter);
-
             }
 
             const actionWaitAfter: number | undefined = isDefined(action.waitAfter) ? action.waitAfter : manifest.blueprint.simulation?.config?.actionWait;
@@ -109,119 +112,118 @@ export class SimulationService {
         return recordedActions;
     }
 
-    private async executeCommand(command: BlueprintCommand, state: CommandState, dependencies: { processor: CommandProcessor }) {
+    private async executeCommand(command: BlueprintCommand, state: ScreenshotsState, dependencies: { processor: CommandProcessor }) {
         const { processor } = dependencies;
-        const commandName = command.getCommand();
+        const commandName = BlueprintCommand.getName(command);
         switch (commandName) {
-            case CommandName.$:
+            case BlueprintCommandName.$:
                 await processor.find(command.$!.selector, command.$!.root, command.$!.saveAs);
                 break;
-            case CommandName.clear:
+            case BlueprintCommandName.clear:
                 await processor.clear(command.clear!.selector.selector, command.clear!.selector.root);
                 break;
-            case CommandName.click:
+            case BlueprintCommandName.click:
                 await processor.click(command.click!.selector.selector, command.click!.selector.root);
                 break;
-            case CommandName.close:
+            case BlueprintCommandName.close:
                 await processor.close();
                 break;
-            case CommandName.closePage:
+            case BlueprintCommandName.closePage:
                 await processor.closePage();
                 break;
-            case CommandName.evaluateHandle:
+            case BlueprintCommandName.evaluateHandle:
                 await processor.evaluateHandle(command.evaluateHandle!.pageFunction, command.evaluateHandle!.root, command.evaluateHandle!.saveAs);
                 break;
-            case CommandName.find:
+            case BlueprintCommandName.find:
                 await processor.find(command.find!.selector, command.find!.root, command.find!.saveAs);
                 break;
-            case CommandName.focus:
+            case BlueprintCommandName.focus:
                 await processor.focus(command.focus!.selector.selector, command.focus!.selector.root);
                 break;
-            case CommandName.frame:
+            case BlueprintCommandName.frame:
                 await processor.frame(command.frame!);
                 break;
-            case CommandName.goBack:
+            case BlueprintCommandName.goBack:
                 await processor.goBack(command.goBack!.timeout, command.goBack!.waitUntil);
                 break;
-            case CommandName.goForward:
+            case BlueprintCommandName.goForward:
                 await processor.goForward(command.goForward!.timeout, command.goForward!.waitUntil);
                 break;
-            case CommandName.goto:
+            case BlueprintCommandName.goto:
                 await processor.goTo(command.goto!.url);
                 break;
-            case CommandName.hover:
+            case BlueprintCommandName.hover:
                 await processor.hover(command.hover!.selector.selector, command.hover!.selector.root);
                 break;
-            case CommandName.import:
+            case BlueprintCommandName.import:
                 await processor.import(command.import!.name, command.import!.ranges);
                 break;
-            case CommandName.log:
+            case BlueprintCommandName.log:
                 await processor.log(command.log!.message);
                 break;
-            case CommandName.mainFrame:
+            case BlueprintCommandName.mainFrame:
                 await processor.mainFrame();
                 break;
-            case CommandName.newPage:
+            case BlueprintCommandName.newPage:
                 await processor.newPage();
                 break;
-            case CommandName.press:
+            case BlueprintCommandName.press:
                 await processor.press(command.press!.key, command.press!.text, command.press!.selector?.selector, command.press!.selector?.root);
                 break;
-            case CommandName.reload:
+            case BlueprintCommandName.reload:
                 await processor.reload(command.reload!.timeout, command.reload!.waitUntil);
                 break;
-            case CommandName.screenshot:
-                const name: string = getScreenshotName(command.screenshot!.name, state.screenshotNum, state.totalScreenshots, state.orderScreenshots);
-                await processor.screenshot(state.screenshotDir, name);
+            case BlueprintCommandName.screenshot:
+                await this.screenshot(command.screenshot!.name, state, { processor });
                 state.screenshotNum = state.screenshotNum + 1;
                 break;
-            case CommandName.setCacheEnabled:
+            case BlueprintCommandName.setCacheEnabled:
                 await processor.setCacheEnabled(command.setCacheEnabled!);
                 break;
-            case CommandName.setDefaultNavigationTimeout:
+            case BlueprintCommandName.setDefaultNavigationTimeout:
                 await processor.setDefaultNavigationTimeout(command.setDefaultNavigationTimeout!);
                 break;
-            case CommandName.setDefaultTimeout:
+            case BlueprintCommandName.setDefaultTimeout:
                 await processor.setDefaultTimeout(command.setDefaultTimeout!);
                 break;
-            case CommandName.setGeoLocation:
+            case BlueprintCommandName.setGeoLocation:
                 await processor.setGeoLocation(command.setGeoLocation!.latitude, command.setGeoLocation!.longitude, command.setGeoLocation!.accuracy);
                 break;
-            case CommandName.setJavascriptEnabled:
+            case BlueprintCommandName.setJavascriptEnabled:
                 await processor.setJavascriptEnabled(command.setJavascriptEnabled!);
                 break;
-            case CommandName.setOfflineMode:
+            case BlueprintCommandName.setOfflineMode:
                 await processor.setOfflineMode(command.setOfflineMode!);
                 break;
-            case CommandName.setUserAgent:
+            case BlueprintCommandName.setUserAgent:
                 await processor.setUserAgent(command.setUserAgent!.userAgent);
                 break;
-            case CommandName.setWindowSize:
+            case BlueprintCommandName.setWindowSize:
                 await processor.setWindowSize(command.setWindowSize!.width, command.setWindowSize!.height);
                 break;
-            case CommandName.tap:
+            case BlueprintCommandName.tap:
                 await processor.tap(command.tap!.selector.selector, command.tap!.selector.root);
                 break;
-            case CommandName.type:
+            case BlueprintCommandName.type:
                 await processor.type(command.type!.text, command.type!.selector?.root, command.type!.selector?.root);
                 break;
-            case CommandName.wait:
+            case BlueprintCommandName.wait:
                 await processor.wait(command.wait!);
                 break;
-            case CommandName.waitForFrame:
+            case BlueprintCommandName.waitForFrame:
                 await processor.waitForFrame(command.waitForFrame!.urlOrPredicate);
                 break;
-            case CommandName.waitForNavigation:
+            case BlueprintCommandName.waitForNavigation:
                 await processor.waitForNavigation(command.waitForNavigation!.timeout, command.waitForNavigation!.waitUntil);
                 break;
-            case CommandName.waitForNetworkIdle:
+            case BlueprintCommandName.waitForNetworkIdle:
                 await processor.waitForNetworkIdle(command.waitForNetworkIdle!.idleTime, command.waitForNetworkIdle!.timeout);
                 break;
-            case CommandName.waitFor:
+            case BlueprintCommandName.waitFor:
                 await processor.waitFor(command.waitFor!.selector.selector, command.waitFor!.selector.root, command.waitFor!.options, command.waitFor!.saveAs);
                 break;
             default:
-                throw new Error(`Unsupported command: '${commandName}'. Supported commands: ${Object.values(CommandName).join(',')}`);
+                throw new Error(`Unsupported command: '${commandName}'. Supported commands: ${Object.values(BlueprintCommandName).join(',')}`);
         }
     }
 
@@ -267,6 +269,19 @@ export class SimulationService {
             console.log("True");
         }
         return false;
+    }
+
+    private async screenshot(name: string, state: ScreenshotsState, options: { safe?: boolean, processor: CommandProcessor }) {
+        const screenshotName: string = getScreenshotName(name, state.screenshotNum, state.totalScreenshots, state.orderScreenshots);
+        try {
+            await options.processor.screenshot(state.screenshotDir, screenshotName);
+        } catch(err) {
+            if(options.safe) {
+                console.error(err);
+            } else {
+                throw err;
+            }
+        }
     }
 
     private getCommandService(manifest: BlueprintManifest): BrowserService {

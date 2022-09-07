@@ -1,0 +1,160 @@
+version: "1"
+blueprint:
+  name: "View Pay"
+  args: 
+    url: "d13up08wb01.dev.us.corp"
+  simulation:
+    config:
+      actionWait: 5
+      commandWait: 2
+    actions:
+      - name: "VP_01_HitServer"
+        commands: 
+          - # Hit server
+            goto: "{{url}}"
+      - name: "VP_02_Login"
+        commands:
+          - # Enter username
+            type:
+              selector: "#ctl00_Content_Login1_UserName"
+              text: "{{username}}"
+          - # Enter password
+            type:
+              selector: "#ctl00_Content_Login1_Password"
+              text: "{{password}}"
+          - # Login
+            click: "#ctl00_Content_Login1_LoginButton"
+            waitAfter: 10
+          - # Pin nav menu
+            click: "#nav-menu-button"
+            condition: 
+              selector: "#nav-menu-button"
+          - click: "#pin-button"
+            condition: 
+              selector: "#pin-button[aria-label=Pin]"
+      - name: "VP_03_EePayrollPayCheckDetail"
+        commands:
+          - # Click Myself from nav menu
+            find: 
+              saveAs: "menuTabShadowRoot"
+              selector: "shadowRoot(ukg-tab[aria-label=Myself])"
+          # Auto collapse nav menu
+          - find:
+              root: "menuTabShadowRoot"
+              selector: ".ukg-tab-container"
+              saveAs: "tabContainer"
+          - click: "tabContainer"
+          - click: "#menu_myself-options-button"
+          - click: "xpath///label[contains(text(), 'Collapse All')]"
+          # Click 'Pay' nav menu group
+          - find:
+              saveAs: menuItemGroup
+              selector: ukg-nav-item[aria-label='Pay'][level='L1']
+          - find: 
+              saveAs: "menuItemGroupShadowRoot"
+              selector: "shadowRoot(menuItemGroup)"
+          - find:
+              root: "menuItemGroupShadowRoot"
+              selector: ".nav-item-wrapper"
+              saveAs: "navItemWrapper"
+            condition: 
+              not: 
+                selector: "menuItemGroup[aria-expanded]"
+          - click:
+              selector: "navItemWrapper"
+            condition: 
+              not: 
+                selector: "menuItemGroup[aria-expanded]"
+          - # Click 'Current Pay Statement' nav menu item
+            click: "ukg-nav-item[aria-label='Current Pay Statement'][level='L2']"
+      - name: "VP_04_A_EePayrollPayCheckHistory"
+        commands:
+          click: "ukg-nav-item[aria-label='Pay History'][level='L2']"
+      - name: "VP_04_B_EePayrollPayCheckHistory_FilterAll"
+        commands:
+          - mainFrame: {} 
+          - clear: "xpath///input[@class='usDatePickerTextBox' and contains(@id, 'grvPRPayRegister_from')]"
+          - clear: "xpath///input[@class='usDatePickerTextBox' and contains(@id, 'grvPRPayRegister_to')]"
+          - click: "#grvPRPayRegister_filterButton"
+      - name: "VP_05_PayHistoryDetail"
+        commands:
+          - setWindowSize:
+              width: 1920
+              height: 1080
+          - click: "#ctl00_Content_grvPRPayRegister_ctl02_usclPayDate"
+          - frame: 0
+      - name: "VP_06_EePayrollYTDSummary"
+        commands:
+          - click: "ukg-nav-item[aria-label='YTD Summary'][level='L2']"
+      - name: "VP_07_Logout"
+        commands:
+          - click: "#unified-nav-header-user-account-menu-button"
+          - click: "#ukg-menu-hdr_logout"
+  script:
+    # assertions: 
+    #   - text: "text"
+    #     expect: 5
+    parameters:
+      - name: "P_UltiProHost"
+        replace: "{{url}}"
+      - name: "P_Username"
+        replace: "{{username}}"
+        file: "Users"
+      - name: "P_Password"
+        replace: "{{password}}"
+        file: "Users"
+    correlations:
+      - name: "C_ViewState"
+        boundary:
+          left: '_VIEWSTATE" value="'
+          right: '" />'
+        scope: all
+      - name: "C_ViewStateGen"
+        boundary:
+          left: '_VIEWSTATEGENERATOR" value="'
+          right: '" />'
+        scope: all
+      - name: "C_EventValidation"
+        boundary:
+          left: '_EVENTVALIDATION" value="'
+          right: '" />'
+        scope: "all"
+    excludeHeaders:
+      - "Sec-Fetch-*"
+    excludeUrls:
+      - "*gvt1.com*"
+      - "*google.com*"
+      - "*gstatic.com*"
+      - "*mozilla*"
+      - "*ocsp.digicert.com*"
+      - "*googleapis.com*"
+      - "*googleapi.com*"
+      - "*app.pendo.io*"
+  profiles:
+    calendar:
+      args:
+        username: "usa-canu"
+        password: "password"
+      script:
+        files:
+          - name: "Users"
+            sourcePath: "Calendar_Users.dat"
+            targetPath: "Users.dat"
+    gsdb:
+      args:
+        username: "papag"
+        password: "password"
+      script:
+        files:
+          - name: "Users"
+            sourcePath: "GSDB_Users.dat"
+            targetPath: "Users.dat"
+    serviceb:
+      args:
+        username: "broadL"
+        password: "password"
+      script:
+        files:
+          - name: "Users"
+            sourcePath: "ServiceB_Users.dat"
+            targetPath: "Users.dat"

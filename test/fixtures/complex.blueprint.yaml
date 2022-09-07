@@ -77,6 +77,16 @@ blueprint:
       - name: "Password"
         replace: "{{password}}"
         file: "Users"
+    excludeHeaders:
+      - "test"
+      - header: "host"
+        profiles:
+        - "serviceb"
+    excludeUrls:
+      - "*/Report.aspx"
+      - url: "*/Test.aspx"
+        profiles:
+          - "!serviceb"
     # correlations:
     #   - name: "C_XSRF_TOKEN"
     #     boundary:
