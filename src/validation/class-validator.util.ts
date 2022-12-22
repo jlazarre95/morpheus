@@ -1,4 +1,5 @@
 import { validate, ValidationError, ValidatorOptions } from "class-validator";
+import { stringify } from "../util/serialization.util";
 
 interface IValidationErrorEntry {
     prefix: string;
@@ -17,6 +18,8 @@ export function getValidationErrorMessage(errors: ValidationError[], options: IV
     let message: string = "";
     const stk: IValidationErrorEntry[] = []; 
     for(let i = errors.length - 1; i >= 0; i--) {
+        
+        console.log(stringify(errors[i]))
         const error: ValidationError = errors[i];
         stk.push({ 
             prefix: "$", 
@@ -28,6 +31,7 @@ export function getValidationErrorMessage(errors: ValidationError[], options: IV
         for(const constraintKey in entry.error.constraints) {
             message += prefix;
             message += (parent ? entry.prefix + ": " : ""); 
+            // message += `(${entry.error.toString()}) `;
             message += entry.error.constraints[constraintKey];
             message += suffix;
         }

@@ -1,0 +1,8 @@
+require: 
+  - source-map-support/register
+  - ts-node/register
+  - test/reflect-metadata.ts
+full-trace: true
+spec: 
+  - test/integration/**/*.test.ts
+exit: true

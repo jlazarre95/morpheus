@@ -6,6 +6,7 @@ import { BlueprintAssertion, BlueprintCorrelation, BlueprintExcludeHeader, Bluep
 import { getAssertions, getCorrelations, getExcludeHeaders, getExcludeUrls, getFiles, getLogic, getParameters } from "../models/blueprint.util";
 import { loadActionsFile, RecordedAction, RecordedActions } from "../simulation";
 import { Har, HarEntry, HarRequest, HarResponse } from "./har";
+import { Parameters } from "./parameter/parameter.util";
 import { ScriptOptions } from "./script-options";
 import { ScriptType } from "./script-type";
 import { includeUrl } from "./util/script.util";
@@ -94,6 +95,9 @@ export class ScriptService {
             throw new Error(`No generator that supports script type '${scriptType}'`);
         }
 
+        const parameters: BlueprintParameter[] = options.manifest ? getParameters(options.manifest, options.profile) : [];
+        Parameters.setDates(parameters, new Date());
+
         await this.printScriptHeader(name, options);
         await this.generateScript(generator, await Har.loadHarFile(harPath), {
             scriptName: name,
@@ -101,7 +105,7 @@ export class ScriptService {
             outputDir: outputDir,
             assertions: options.manifest ? getAssertions(options.manifest, options.profile) : [],
             files: options.manifest ? getFiles(options.manifest, options.profile, options.files) : [],
-            parameters: options.manifest ? getParameters(options.manifest, options.profile) : [],
+            parameters: parameters,
             correlations: options.manifest ? getCorrelations(options.manifest, options.profile) : [],
             logic: options.manifest ? getLogic(options.manifest, options.profile) : [],
             excludeHeaders: options.manifest ? getExcludeHeaders(options.manifest, options.profile): [],

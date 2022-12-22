@@ -1,3 +1,4 @@
+import { plainToInstance } from "class-transformer";
 import { readFile } from "fs-extra";
 
 export class HarHeader {
@@ -33,13 +34,26 @@ export class HarPostData {
     params: HarPostDataParam[];
 }
 
-export class HarRequest { 
+export class HarRequest {
     url: string;
     method: string;
     headers: HarHeader[];
     cookies: HarCookie[];
     queryString: HarQueryString;
     postData: HarPostData;
+
+    getBody(): string {
+        if (this.postData.text) {
+            return this.postData.text;
+        } else if(this.postData.params) {
+            let str: string = '';
+            for (const param of this.postData.params) {
+                str += `&${param.name}=${param.value}`;
+            }
+            return str.length >= 1 ? str.substring(1) : '';
+        }
+        return '';
+    }   
 }
 
 export class HarResponseContent {
@@ -55,6 +69,10 @@ export class HarResponse {
     cookies: HarCookie[];
     content: HarResponseContent;
     redirectUrl: string;
+
+    getBody(): string {
+        return this.content?.text || '';
+    }
 }
 
 export class HarEntry {
@@ -79,12 +97,12 @@ export class Har {
     }
 
     private static parseString(str: string): Har {
-        return JSON.parse(str);
-    } 
+        return plainToInstance(Har, JSON.parse(str));
+    }
 
     static getHeader(name: string, headers: HarHeader[]): HarHeader | undefined {
-        for(const h of headers)
-            if(h.name.toLowerCase() === name.toLowerCase())
+        for (const h of headers)
+            if (h.name.toLowerCase() === name.toLowerCase())
                 return h;
         return undefined;
     }
@@ -95,9 +113,9 @@ export class Har {
 
     static headersToString(headers: HarHeader[]): string {
         let str: string = "";
-        for(const header of headers) {
+        for (const header of headers) {
             str += `\n${header.name}: ${header.value}`;
         }
-         return str;
+        return str;
     }
 }

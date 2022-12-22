@@ -91,30 +91,134 @@ blueprint:
           - click: "#unified-nav-header-user-account-menu-button"
           - click: "#ukg-menu-hdr_logout"
   script:
+    # parameter
+    # name: string
+    # replace: Array
+    # file: Object
+    # date: Object
+    # replace.text OR replace.date
+    # replace.filters: ReplaceFilter[]
+    # replace.filters.requestResponse
+    # replace.filters.ignoreCase
+
+    # correlation
+    # name: string
+    # boundary|regex|json
+    # scope: "all" | "headers" | "body" | "cookies"
+    # url: string
+    # ignoreRedirects: boolean
+    # notFound: "error" | "warning"
+    # all: boolean
+    # last: boolean
+    # saveLength: boolean
+    # saveOffset: boolean
+    # requestResponseFilters: RequestResponseFilter[] // needs to support cookies
+    # replaceFilters: ReplaceFilter[]
+
+    # assertions
+    # text: string
+    # prefix: Object
+    # suffix: Object
+    # (prefix|suffix).ignoreCase, (prefix|suffix).dig, (prefix|suffix).bin, (prefix|suffix).ALNUMIC, (prefix|suffix).ALNUMLC, (prefix|suffix).ALNUMUC
+    # scope: "all" | "headers" | "body" | "noResource"
+    # saveCount: string
+    # ignoreRedirects: boolean
+    # fail: "found" | "notFound"
+    # requestResponseFilters: RequestResponseFilter[]
+    # minCount: number?
+    
     parameters:
-      - name: "P_Url"
-        replace: 
-          - text: "D13UP08WB01.dev.us.corp"
-            ignoreCase: false
       - name: "P_Username"
-        replace: 
-          - text: "{{username}}"
-            ignoreCase: true
+        replace:
+          text: "{{username}}" # wildcard
+          filters: # should correlations have multiple search filters?
+            - boundary: 
+                left: ""
+                right: ""
+              scope: "all|url|headers|body"
+              ocurrences:
+                - 2
+                - "5-9"
+                - "!10"
+              requestResponse:
+                # text, boundary, text & boundary, regex, json
+                target: "all|request|response"
+                method: 
+                  - "GET"
+                  - "!PUT"
+                url: "!"  # wildcard
+                headers: "!"  # wildcard
+                body: "!"  # wildcard
+                status: 
+                  - "200-300"
+                  - 400
+                action: "!test" 
+                ocurrences:
+                  - 2
+                  - "5-9"
+                  - "!10"
+                  # minCount: 5
+                  # contains:
+                  #   text: ""
+                  #   date: 
+                  #     date: ""
+                  #     format: ""
+                  #   boundary: 
+                  #     left: ""
+                  #     right: ""
+                  #   regex:
+                  #     pattern: ""
+                  #   json:
+                  #     path: ""
+                  #   scope: "all|headers|body"
         file: "Users"
       - name: "P_Password"
-        replace: "{{password}}"
-        file: "Users"
+        file: 
+          # name: "Users"
+          # replace: "{{password}}"
       - name: "P_Date"
-        replace: "9/1/20"
-        date: 
-          format: "%D"
-          offset: 86400
+        replace:
+          - text: "September 1st, 2020" # regex
+          - date: 
+              value: "9/1/20"
+              format: "M/D/YY"
+            filters: # should correlations have multiple search filters?
+              - boundary: 
+                  left: ""
+                  right: ""
+                scope: "all|url|headers|body"
+                ocurrences:
+                  - 2
+                  - "5-9"
+                  - "!10"
+                requestResponse:
+                  # text, boundary, text & boundary, regex, json
+                  target: "all|request|response"
+                  method: 
+                    - "GET"
+                    - "!PUT"
+                  url: "!"  # regex
+                  headers: "!"  # regex
+                  body: "!"  # regex
+                  status: 
+                    - "200-300"
+                    - 400
+                  action: "!test" 
+                  ocurrences:
+                    - 2
+                    - "5-9"
+                    - "!10"
+        date:
+          offset: 0
+          outputFormat: "%D"
     correlations:
       - name: "C_ViewState"
         boundary:
           left: '_VIEWSTATE" value="'
           right: '" />'
         scope: all
+        replace:
+          filters: 
       - name: "C_ViewStateGen"
         boundary:
           left: '_VIEWSTATEGENERATOR" value="'

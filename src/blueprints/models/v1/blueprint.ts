@@ -1,12 +1,430 @@
 import { Type, Transform, Exclude } from "class-transformer";
-import { IsNumber, Min, IsString, IsOptional, IsNotEmpty, ValidateNested, ArrayMinSize, IsBoolean, isNotEmpty, isDefined, IsIn, IsInstance, ValidateIf } from "class-validator";
-import { stringsToRanges } from "../../../util";
+import { IsNumber, Min, IsString, IsOptional, IsNotEmpty, ValidateNested, ArrayMinSize, IsBoolean, isNotEmpty, isDefined, IsIn, IsInstance, ValidateIf, IsNumberString, IsArray } from "class-validator";
+import { isRegExp } from "util/types";
+import { Range, getRanges, parseRange } from "../../../util";
 import { IsDefinedXor, IsTypeOf, IsOfType, Ensure, IsDefinedOr, IsGte } from "../../../validation";
 import { PressableKey, WaitUntilState } from "../../simulation";
-import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintManifest, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues, BlueprintProfile } from "../blueprint";
+import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintHttpMethod, BlueprintManifest, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues, BlueprintProfile, BlueprintReplace, BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter, BlueprintRequestResponseFilterTarget } from "../blueprint";
 import { BlueprintCommandName } from "../blueprint-command-name";
 import { getBlueprintV1Selector } from "./blueprint.util";
-import { IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformToInt, IsBlueprintV1Profiles, TransformArray, TransformToArgs, TransformToBoolean } from "./blueprint.validators";
+import { IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformToInt, IsBlueprintV1Profiles, TransformArray, TransformToArgs, TransformToBoolean, IsBlueprintV1Ranges, IsBlueprintV1Replace, IsBlueprintV1ReplaceFilters } from "./blueprint.validators";
+
+export class BlueprintV1BoundaryLeft {
+    @IsString()
+    boundary: string;
+
+    @IsBoolean()
+    @TransformToBoolean()
+    @IsOptional()
+    ignoreCase?: boolean;
+
+    constructor(boundary: string) {
+        this.boundary = boundary;
+    }
+}
+
+export class BlueprintV1BoundaryRight {
+    @IsString()
+    boundary: string;
+
+    @IsBoolean()
+    @TransformToBoolean()
+    @IsOptional()
+    ignoreCase?: boolean;
+
+    constructor(boundary: string) {
+        this.boundary = boundary;
+    }
+}
+
+export class BlueprintV1Boundary {
+    @ValidateNested()
+    @Type(() => BlueprintV1BoundaryLeft)
+    @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1BoundaryLeft(value) : value)
+    @IsOptional()
+    @IsDefinedOr(['right'])
+    left?: BlueprintV1BoundaryLeft;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1BoundaryRight)
+    @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1BoundaryRight(value) : value)
+    @IsOptional()
+    right?: BlueprintV1BoundaryRight;
+}
+
+
+export enum BlueprintV1ReplaceFilterScope {
+    all = 'all',
+    url = 'url',
+    body = 'body',
+    headers = 'headers',
+}
+
+export enum BlueprintV1RequestResponseFilterTarget {
+    all = 'all',
+    request = 'request',
+    response = 'response',
+}
+
+export enum BlueprintV1HttpMethod {
+    head = 'head',
+    get = 'get',
+    put = 'put',
+    post = 'post',
+    patch = 'patch',
+    delete = 'delete',
+    options = 'options',
+}
+
+export class BlueprintV1Range {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsNumber()
+    @TransformToInt()
+    from: number;
+
+    @IsNumber()
+    @TransformToInt()
+    @IsGte('from')
+    @IsOptional()
+    to?: number;
+
+    constructor(range: Range) {
+        this.from = range.from;
+        this.to = range.to;
+        this.exclude = range.exclude;
+    }
+
+    static fromRanges(ranges: Range[]): BlueprintV1Range[] {
+        return ranges.map(r => new BlueprintV1Range(r));
+    }
+}
+
+export class BlueprintV1UrlFilter {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    url: string;
+
+    @IsBoolean()
+    @IsOptional()
+    regex?: boolean;
+
+    constructor(url: string, exclude?: boolean) {
+        this.url = url;
+        this.exclude = exclude;
+    }
+
+    static fromShorthand(url: string) {
+        if(url.charAt(0) === '!') {
+            return new BlueprintV1UrlFilter(url.substring(1), true);
+        } else {
+            return new BlueprintV1UrlFilter(url);
+        }
+    }
+}
+
+export class BlueprintV1HeadersFilter {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    headers: string;
+
+    @IsBoolean()
+    @IsOptional()
+    regex?: boolean;
+
+    constructor(headers: string, exclude?: boolean) {
+        this.headers = headers;
+        this.exclude = exclude;
+    }
+
+    static fromShorthand(headers: string) {
+        if(headers.charAt(0) === '!') {
+            return new BlueprintV1HeadersFilter(headers.substring(1), true);
+        } else {
+            return new BlueprintV1HeadersFilter(headers);
+        }
+    }
+}
+
+export class BlueprintV1BodyFilter {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    body: string;
+
+    @IsBoolean()
+    @IsOptional()
+    regex?: boolean;
+
+    constructor(body: string, exclude?: boolean) {
+        this.body = body;
+        this.exclude = exclude;
+    }
+
+
+    static fromShorthand(body: string) {
+        if(body.charAt(0) === '!') {
+            return new BlueprintV1BodyFilter(body.substring(1), true);
+        } else {
+            return new BlueprintV1BodyFilter(body);
+        }
+    }
+}
+
+export class BlueprintV1ActionFilter {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsString()
+    @IsNotEmpty()
+    action: string;
+
+    @IsBoolean()
+    @IsOptional()
+    regex?: boolean;
+
+    constructor(action: string, exclude?: boolean) {
+        this.action = action;
+        this.exclude = exclude;
+    }
+
+    static fromShorthand(action: string) {
+        if(action.charAt(0) === '!') {
+            return new BlueprintV1ActionFilter(action.substring(1), true);
+        } else {
+            return new BlueprintV1ActionFilter(action);
+        }
+    }
+}
+
+export class BlueprintV1HttpMethodFilter {
+    @IsBoolean()
+    @IsOptional()
+    exclude?: boolean;
+
+    @IsString()
+    @IsOptional()
+    method: (BlueprintHttpMethod | string);
+
+    constructor(method: BlueprintHttpMethod | string, exclude?: boolean) {
+        this.method = method;
+        this.exclude = exclude;
+    }
+
+    static fromShorthand(method: string) {
+        if(method.charAt(0) === '!') {
+            return new BlueprintV1HttpMethodFilter(method.substring(1), true);
+        } else {
+            return new BlueprintV1HttpMethodFilter(method);
+        }
+    }
+}
+
+export class BlueprintV1RequestResponseFilter {
+    @IsIn(Object.values(BlueprintV1RequestResponseFilterTarget))
+    @IsOptional()
+    target?: BlueprintV1RequestResponseFilterTarget;
+
+    @ValidateNested({ each: true })
+    @Type(() => BlueprintV1HttpMethodFilter)
+    @Transform(({ value }) => typeof value === 'string' ? [BlueprintV1HttpMethodFilter.fromShorthand(value)] : value)
+    @TransformArray(({ value }) => typeof value === 'string' ? BlueprintV1HttpMethodFilter.fromShorthand(value) : value)
+    @IsOptional()
+    method?: BlueprintV1HttpMethodFilter[];
+
+    @ValidateNested()
+    @Type(() => BlueprintV1UrlFilter)
+    @Transform(({ value }) => typeof value === 'string' ? BlueprintV1UrlFilter.fromShorthand(value) : value)
+    @IsOptional()
+    url?: BlueprintV1UrlFilter;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1HeadersFilter)
+    @Transform(({ value }) => typeof value === 'string' ? BlueprintV1HeadersFilter.fromShorthand(value) : value)
+    @IsOptional()
+    headers?: BlueprintV1HeadersFilter;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1BodyFilter)
+    @Transform(({ value }) => typeof value === 'string' ? BlueprintV1BodyFilter.fromShorthand(value) : value)
+    @IsOptional()
+    body?: BlueprintV1BodyFilter;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1ActionFilter)
+    @Transform(({ value }) => typeof value === 'string' ? BlueprintV1ActionFilter.fromShorthand(value) : value)
+    @IsOptional()
+    action?: BlueprintV1ActionFilter;
+
+    @IsBlueprintV1Ranges()
+    @IsOptional()
+    status?: BlueprintV1Range[];
+
+    @IsBlueprintV1Ranges()
+    @IsOptional()
+    occurrences?: BlueprintV1Range[];
+
+    getRequestResponseFilter(): BlueprintRequestResponseFilter {
+        return {
+            target: this.getTarget(),
+            method: this.method?.map(m => {
+                return { exclude: m.exclude, method: this.getMethod(m.method) };
+            }),
+            url: this.url,
+            headers: this.headers,
+            body: this.body,
+            action: this.action,
+            status: this.status,
+            occurrences: this.occurrences
+        };
+    }
+
+    getTarget(): BlueprintRequestResponseFilterTarget | undefined {
+        switch(this.target) {
+            case BlueprintV1RequestResponseFilterTarget.all:
+                return BlueprintRequestResponseFilterTarget.all;
+            case BlueprintV1RequestResponseFilterTarget.request:
+                return BlueprintRequestResponseFilterTarget.request;
+            case BlueprintV1RequestResponseFilterTarget.response:
+                return BlueprintRequestResponseFilterTarget.response;
+            default:
+                return undefined;
+        }
+    }
+
+    getMethod(method: BlueprintV1HttpMethod | string): BlueprintHttpMethod | string {
+        if(typeof method === 'string') {
+            return method;
+        }
+        return BlueprintHttpMethod[method];
+    }
+}
+
+export class BlueprintV1Date {
+    // @IsString()
+    // @IsNotEmpty()
+    // @IsOptional()
+    // date?: string;
+
+    @IsString()
+    @IsNotEmpty()
+    format: string;
+
+    constructor(format: string) {
+        this.format = format;
+    }
+}
+
+export class BlueprintV1ReplaceFilter {
+    @IsDefinedXor(Object.keys(BlueprintV1ReplaceFilter))
+    @Exclude()
+    private __topLevel: string;
+
+    @IsBoolean()
+    @IsOptional()
+    ignoreCase?: boolean;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1Boundary)
+    @IsOptional()
+    boundary?: BlueprintV1Boundary;
+
+    @IsIn(Object.values(BlueprintV1ReplaceFilterScope))
+    @IsOptional()
+    scope?: BlueprintV1ReplaceFilterScope;
+
+    @IsBlueprintV1Ranges()
+    @IsOptional()
+    ocurrences?: BlueprintV1Range[];
+
+    @ValidateNested()
+    @Type(() => BlueprintV1RequestResponseFilter)
+    @IsOptional()
+    requestResponse?: BlueprintV1RequestResponseFilter;
+
+    getReplaceFilter(): BlueprintReplaceFilter {
+        return {
+            ignoreCase: this.ignoreCase,
+            boundary: this.boundary,
+            scope: this.getScope(),
+            occurrences: this.ocurrences,
+            requestResponse: this.requestResponse?.getRequestResponseFilter(),
+        }
+    }
+
+    getScope(): BlueprintReplaceFilterScope | undefined {
+        return this.scope ? BlueprintReplaceFilterScope[this.scope] : undefined;
+    }
+}
+
+// export class BlueprintV1ReplaceText {
+//     @IsString()
+//     @IsNotEmpty()
+//     text: string;
+
+//     constructor(text: string) {
+//         this.text = text;
+//     }
+// }
+
+export class BlueprintV1Replace {
+    @IsDefinedXor(['text', 'date'])
+    @Exclude()
+    private __topLevel: string;
+
+    // @ValidateNested()
+    // @Type(() => BlueprintV1ReplaceText)
+    // @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1ReplaceText(value) : value)
+    // @IsOptional()
+    // text?: BlueprintV1ReplaceText;
+
+    @IsString()
+    @IsOptional()
+    text?: string;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1Date)
+    @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1Date(value) : value)
+    @IsOptional()
+    date?: BlueprintV1Date;
+
+    @IsBoolean()
+    @IsOptional()
+    ignoreCase?: boolean;
+
+    @ValidateNested()
+    @Type(() => BlueprintV1ReplaceFilter)
+    @IsOptional()
+    filters?: BlueprintV1ReplaceFilter[];
+
+    constructor(text: string) {
+        this.text = text;
+        // this.text = new BlueprintV1ReplaceText(text);
+    }
+
+    getReplace(): BlueprintReplace {
+        return {
+            text: this.text,
+            date: this.date,
+            ignoreCase: this.ignoreCase,
+            filters: this.filters?.map(f => f.getReplaceFilter())
+        }
+    }
+}
 
 export class BlueprintV1Selector {
     @IsString()
@@ -93,7 +511,8 @@ export class BlueprintV1ImportCommand {
 
     @ValidateNested({ each: true })
     @Type(() => BlueprintV1ImportRange)
-    @Transform(({ value }) => typeof value === 'string' ? BlueprintV1ImportCommand.fromShorthand(value) : value)
+    @Transform(({ value }) => typeof value === 'string' ? [new BlueprintV1ImportRange(parseRange(value))] : value)
+    @TransformArray(({ value }) => typeof value === 'string' ? BlueprintV1ImportRange.fromShorthand(value) : value)
     @ArrayMinSize(1)
     @IsOptional()
     ranges?: BlueprintV1ImportRange[];
@@ -113,7 +532,7 @@ export class BlueprintV1ImportCommand {
         name = tokens[0];
         ranges = tokens[1].split(',');
         const importRangesArr: BlueprintV1ImportRange[] = [];
-        stringsToRanges(ranges).forEach(r => importRangesArr.push(new BlueprintV1ImportRange(r.from, r.to)));
+        getRanges(ranges).forEach(r => importRangesArr.push(new BlueprintV1ImportRange(r.from, r.to)));
         return new BlueprintV1ImportCommand(name, importRangesArr);
     }
 }
@@ -801,9 +1220,6 @@ export class BlueprintV1Simulation {
     actions: BlueprintV1Action[];
 }
 
-
-
-
 export enum BlueprintV1CorrelationScope {
     headers = "headers",
     body = "body",
@@ -918,48 +1334,6 @@ export class BlueprintV1Regex {
     }
 }
 
-export class BlueprintV1BoundaryLeft {
-    @IsString()
-    boundary: string;
-
-    @IsBoolean()
-    @TransformToBoolean()
-    @IsOptional()
-    ignoreCase?: boolean;
-
-    constructor(boundary: string) {
-        this.boundary = boundary;
-    }
-}
-
-export class BlueprintV1BoundaryRight {
-    @IsString()
-    boundary: string;
-
-    @IsBoolean()
-    @TransformToBoolean()
-    @IsOptional()
-    ignoreCase?: boolean;
-
-    constructor(boundary: string) {
-        this.boundary = boundary;
-    }
-}
-
-export class BlueprintV1Boundary {
-    @ValidateNested()
-    @Type(() => BlueprintV1BoundaryLeft)
-    @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1BoundaryLeft(value) : value)
-    @IsOptional()
-    @IsDefinedOr(['right'])
-    left?: BlueprintV1BoundaryLeft;
-
-    @ValidateNested()
-    @Type(() => BlueprintV1BoundaryRight)
-    @Transform(({ value }) => typeof value === 'string' ? new BlueprintV1BoundaryRight(value) : value)
-    @IsOptional()
-    right?: BlueprintV1BoundaryRight;
-}
 
 export class BlueprintV1Json {
     @IsString()
@@ -1028,7 +1402,11 @@ export class BlueprintV1Correlation {
     @IsString()
     @IsNotEmpty()
     @IsOptional()
-    requestUrl?: string;
+    url?: string;
+
+    @IsBlueprintV1ReplaceFilters()
+    @IsOptional()
+    replaceFilters?: BlueprintV1ReplaceFilter[];
 
     @IsBlueprintV1Profiles()
     @IsOptional()
@@ -1055,7 +1433,8 @@ export class BlueprintV1Correlation {
             last: this.last,
             ordinal: this.ordinal,
             scope: this.getCorrelationScope(),
-            requestUrl: this.requestUrl,
+            url: this.url,
+            replaceFilters: this.replaceFilters?.map(r => r.getReplaceFilter()),
         };
     }
 
@@ -1193,10 +1572,9 @@ export class BlueprintV1Parameter {
     @IsNotEmpty()
     name: string;
 
-    @IsString()
-    @IsNotEmpty()
+    @IsBlueprintV1Replace()
     @IsOptional()
-    replace?: string;
+    replace?: BlueprintV1Replace[];
 
     @ValidateNested()
     @Type(() => BlueprintV1ParameterFile)
@@ -1222,7 +1600,7 @@ export class BlueprintV1Parameter {
 
     constructor(name: string, replace: string) {
         this.name = name;
-        this.replace = replace;
+        this.replace = [new BlueprintV1Replace(replace)];
     }
 
     static fromShorthand(cmd: string): BlueprintV1Parameter {
@@ -1235,8 +1613,6 @@ export class BlueprintV1Parameter {
         }
         return new BlueprintV1Parameter(tokens[1], tokens[0]);
     }
-
-
 
     getUpdateValueOn(): BlueprintParameterUpdateValueOn {
         switch(this.updateValueOn) {
@@ -1254,7 +1630,7 @@ export class BlueprintV1Parameter {
     getParameter(): BlueprintParameter {
         return {
             name: this.name,
-            replace: this.replace,
+            replace: this.replace?.map(r => r.getReplace()),
             date: this.date,
             file: this.file ? {
                 name: this.file!.name,

@@ -1,9 +1,10 @@
 import { Transform, Type, TransformFnParams, TransformOptions } from "class-transformer";
-import { IsNumber, Min, IsOptional, IsString, ValidateNested, IsNotEmpty, Validate } from "class-validator";
+import { IsNumber, Min, IsOptional, IsString, ValidateNested, IsNotEmpty, Validate, IsArray } from "class-validator";
 import { transformToBlueprintV1Arguments } from ".";
 import { isFloat, isInt } from "../../../validation/validation.util";
-import { BlueprintV1Selector, BlueprintV1XPath } from "./blueprint";
+import { BlueprintV1Range, BlueprintV1Replace, BlueprintV1ReplaceFilter, BlueprintV1Selector, BlueprintV1XPath } from "./blueprint";
 import { boolean, isBooleanable } from 'boolean';
+import { parseRange } from "../../../util";
 
 export function IsBlueprintV1WaitForTimeout() {
     return function (target: any, propertyKey: string) {
@@ -44,6 +45,30 @@ export function IsBlueprintV1Profiles() {
     };
 }
 
+export function IsBlueprintV1Ranges() {
+    return function (target: any, propertyKey: string) {
+        ValidateNested({ each: true })(target, propertyKey)
+        Type(() => BlueprintV1Range)(target, propertyKey)
+        Transform(({ value }) => ['number', 'string'].indexOf(typeof value) >= 0 ? [new BlueprintV1Range(parseRange(value))] : value)(target, propertyKey)
+        TransformArray(({ value }) => ['number', 'string'].indexOf(typeof value) >= 0 ? new BlueprintV1Range(parseRange(value)) : value)(target, propertyKey)
+    };
+}
+export function IsBlueprintV1Replace() {
+    return function (target: any, propertyKey: string) {
+        ValidateNested({ each: true })(target, propertyKey)
+        Type(() => BlueprintV1Replace)(target, propertyKey)
+        Transform(({ value }) => typeof value === 'string' ? [new BlueprintV1Replace(value)] : value)(target, propertyKey)
+        TransformArray(({ value }) => typeof value === 'string' ? new BlueprintV1Replace(value) : value)(target, propertyKey)
+    };
+}
+
+export function IsBlueprintV1ReplaceFilters() {
+    return function (target: any, propertyKey: string) {
+        ValidateNested({ each: true })(target, propertyKey)
+        Type(() => BlueprintV1ReplaceFilter)(target, propertyKey)
+    };
+}
+
 export interface TransformArrayFnParams {
     value: any;
     params: TransformFnParams;
@@ -61,6 +86,7 @@ export function TransformArray<T>(transformFn: (params: TransformArrayFnParams) 
             }
             return objects;
         }, options)(target, propertyKey);
+        IsArray()(target, propertyKey);
     };
 }
 
@@ -72,7 +98,10 @@ export function TransformToBoolean() {
 
 export function TransformToInt() {
     return function (target: any, propertyKey: string) {
-        Transform(({ value }) => typeof value === 'string' && isInt(value) ? parseInt(value) : value)(target, propertyKey);
+        // Transform(({ value }) => value)(target, propertyKey);
+        Transform(({ value }) => {
+            Transform(({ value }) => typeof value === 'string' && isInt(value) ? parseInt(value) : value)(target, propertyKey);
+        })(target, propertyKey);
     };
 }
 

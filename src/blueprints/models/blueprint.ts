@@ -1,3 +1,5 @@
+import { isDefined } from "class-validator";
+import { Range } from "../../util";
 import { PressableKey, WaitUntilState } from "../simulation";
 import { BlueprintCommandName } from "./blueprint-command-name";
 
@@ -186,7 +188,9 @@ export interface BlueprintCorrelation {
 
     scope?: BlueprintCorrelationScope;
 
-    requestUrl?: string;
+    url?: string;
+
+    replaceFilters?: BlueprintReplaceFilter[];
 
     profiles?: string[];
 
@@ -240,19 +244,23 @@ export interface BlueprintParameterDate {
 }
 
 export enum BlueprintParameterType {
-    replace = 'replace',
+    // replace = 'replace',
     date = 'date',
     file = 'file'
 }
 
 export namespace BlueprintParameter {
     export function getType(param: BlueprintParameter): BlueprintParameterType | undefined {
-        if(param.file) {
-            return BlueprintParameterType.file;
-        }
+        // if(param.file) {
+        //     return BlueprintParameterType.file;
+        // }
+        // if(param.date) {
+        //     return BlueprintParameterType.date;
+        // }
+        // return BlueprintParameterType.replace;
         const keys: string[] = Object.keys(param);
         for(const key of keys) {
-            if(key in BlueprintParameterType) {
+            if(key in BlueprintParameterType && isDefined(param[<BlueprintParameterType> key])) {
                 return <BlueprintParameterType> key;
             }
         }
@@ -260,9 +268,98 @@ export namespace BlueprintParameter {
     }
 }
 
+export enum BlueprintReplaceFilterScope {
+    all = 'all',
+    url = 'url',
+    body = 'body',
+    headers = 'headers'
+}
+
+export enum BlueprintRequestResponseFilterTarget {
+    all = 'all',
+    request = 'request',
+    response = 'response',
+}
+
+export enum BlueprintHttpMethod {
+    head = 'head',
+    get = 'get',
+    put = 'put',
+    post = 'post',
+    patch = 'patch',
+    delete = 'delete',
+    options = 'options',
+}
+export interface BlueprintDate {
+    // date?: string;
+    format: string;
+}
+
+export interface BlueprintUrlFilter {
+    exclude?: boolean;
+    url: string;
+    regex?: boolean;
+}
+
+export interface BlueprintHeadersFilter {
+    exclude?: boolean;
+    headers: string;
+    regex?: boolean;
+}
+
+export interface BlueprintBodyFilter {
+    exclude?: boolean;
+    body: string;
+    regex?: boolean;
+}
+
+
+export interface BlueprintActionFilter {
+    exclude?: boolean;
+    action: string;
+    regex?: boolean;
+}
+
+export interface BlueprintRange {
+    exclude?: boolean;
+    from: number;
+    to?: number;
+}
+
+export interface BlueprintHttpMethodFilter {
+    exclude?: boolean;
+    method: (BlueprintHttpMethod | string);
+}
+
+export interface BlueprintRequestResponseFilter {
+    target?: BlueprintRequestResponseFilterTarget;
+    method?: BlueprintHttpMethodFilter[];
+    url?: BlueprintUrlFilter;
+    headers?: BlueprintHeadersFilter;
+    body?: BlueprintBodyFilter;
+    action?: BlueprintActionFilter;
+    status?: BlueprintRange[];
+    occurrences?: BlueprintRange[];
+}
+
+export interface BlueprintReplaceFilter {
+    ignoreCase?: boolean;
+    boundary?: BlueprintBoundary;
+    scope?: BlueprintReplaceFilterScope;
+    occurrences?: BlueprintRange[];
+    requestResponse?: BlueprintRequestResponseFilter;
+}
+
+export interface BlueprintReplace {
+    text?: string;
+    date?: BlueprintDate; 
+    ignoreCase?: boolean;
+    filters?: BlueprintReplaceFilter[];
+}
+
 export interface BlueprintParameter {
     name: string;
-    replace?: string;
+    replace?: BlueprintReplace[];
     file?: BlueprintParameterFile;
     date?: BlueprintParameterDate;
     updateValueOn?: BlueprintParameterUpdateValueOn;

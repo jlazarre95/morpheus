@@ -1,5 +1,56 @@
-export function replaceAll(string: string, search: string, replace: string): string {
-    return string.split(search).join(replace);
+export interface ReplaceAllOptions {
+    ignoreCase?: boolean;
+    regex?: boolean;
+}
+
+/**
+ * 
+ * @param string 
+ * @param search supports wildcards
+ * @param replace 
+ * @param options 
+ * @returns 
+ */
+export function replaceAll(string: string, search: string, replace: string, options: ReplaceAllOptions = {}): string {
+    if(options.regex) {
+        return replaceAllRegex(string, search, replace, options);
+    }
+    return replaceAllText(string, search, replace, options);
+}
+
+function replaceAllText(string: string, search: string, replace: string, options: ReplaceAllOptions): string {
+    const { ignoreCase = false } = options;
+    if(!ignoreCase) {
+        return string.split(search).join(replace);
+    }
+
+    const stringLowerCase: string = string.toLowerCase();
+    const searchLowerCase: string = search.toLowerCase();
+    let result: string = '';
+    let position = 0;
+
+    while(true) {
+        const start: number = stringLowerCase.indexOf(searchLowerCase, position);
+        const end: number = start + searchLowerCase.length;
+        if(start >= 0) {
+            result += string.substring(position, start) + replace;
+        } else {
+            result += string.substring(position);
+            break;
+        }
+        position = end;
+    }
+
+    return result;
+}
+
+function replaceAllRegex(string: string, search: string, replace: string, options: ReplaceAllOptions): string {
+    const { ignoreCase = false } = options;
+    let flags: string = 'g';
+    if(ignoreCase) {
+        flags += 'i';
+    }
+    return string.replace(new RegExp(search, flags), replace);
 }
 
 export function indent(string: string, numSpaces: number = 1, space: string = "\t", lineSeparator: string = "\n") {
@@ -39,6 +90,30 @@ export function escapeString(string: string): string {
         //result = result.replace(new RegExp(entry[0], "g"), entry[1]);
     }
     return result;
+}
+
+export function matchString(str: string | undefined, text: string | undefined, regex: boolean = false): boolean { 
+    return regex ? matchRegex(str, text) : matchText(str, text);
+}
+
+export function matchText(str: string | undefined, text: string | undefined): boolean {
+    if(!str) {
+        str = "";
+    }
+    if(!text) {
+        return true;
+    }
+    return str.includes(text);
+}
+
+export function matchRegex(str: string | undefined, pattern: string | undefined): boolean {
+    if(!str) {
+        str = "";
+    }
+    if(!pattern) {
+        return true;
+    }
+    return new RegExp(pattern).test(str);
 }
 
 export function matchWildcardPattern(str: string | undefined, pattern: string | undefined): boolean {

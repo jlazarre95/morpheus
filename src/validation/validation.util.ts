@@ -15,3 +15,7 @@ export function isFloat(value: string): boolean {
         return false;
     }
 }
+
+export function isBetween(value: number, minMax: { min: number, max: number }): boolean {
+    return minMax.min <= value && value <= minMax.max;
+}

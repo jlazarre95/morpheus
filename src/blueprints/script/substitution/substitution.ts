@@ -1,15 +1,15 @@
-import { RequestFilter } from "../request-filter";
+// import { RequestFilter } from "../request-filter";
 
-export enum SubstitutionScope {
-    ALL = "all",
-    URL = "url",
-    HEADERS = "url",
-    BODY = "body"
-}
+// export enum SubstitutionScope {
+//     ALL = "all",
+//     URL = "url",
+//     HEADERS = "headers",
+//     BODY = "body"
+// }
 
-export class SubstitutionFilter {
-    leftBoundary?: string;
-    rightBoundary?: string;
-    requestFilter?: RequestFilter;
-    scope?: SubstitutionScope;
-}
+// export class SubstitutionFilter {
+//     leftBoundary?: string;
+//     rightBoundary?: string;
+//     requestFilter?: RequestFilter;
+//     scope?: SubstitutionScope;
+// }

@@ -1,11 +1,11 @@
 import { suite, test, timeout } from "@testdeck/mocha";
-import { loadBlueprint } from "..";
-import { BlueprintManifest } from "../models";
-import { BrowserServiceFactory } from "./browser/browser-service-factory";
-import { SimulationService } from "./simulation.service";
+import { loadBlueprint } from "../../src/blueprints";
+import { BlueprintManifest } from "../../src/blueprints/models";
+import { BrowserServiceFactory } from "../../src/blueprints/simulation/browser/browser-service-factory";
+import { SimulationService } from "../../src/blueprints/simulation/simulation.service";
 
 @suite
-export class SimulationServiceTest {
+export class SimulationServiceIntegrationTests {
 
     simulationService: SimulationService;
     readonly headless: boolean = true;

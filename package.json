@@ -9,7 +9,9 @@
     "start": "ts-node dist/src/index.js",
     "start:debug": "ts-node --inspect-brk dist/src/index.js",
     "test": "mocha --config .mocharc.yaml",
-    "test:debug": "mocha --inspect-brk --config .mocharc.yaml"
+    "test:debug": "mocha --inspect-brk --config .mocharc.yaml",
+    "test:int": "mocha --config .mocharc.int.yaml",
+    "test:int:debug": "mocha --inspect-brk --config .mocharc.int.yaml"
   },
   "keywords": [],
   "author": "",

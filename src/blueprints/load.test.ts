@@ -11,10 +11,10 @@ export class loadTests {
         // console.log(JSON.stringify(manifest, null, 4));
     }
 
-    @test
+    @test.only
     async canLoadComplexBlueprint() {
         let manifest: BlueprintManifest = await loadBlueprint('test/fixtures/complex.blueprint.yaml', {
-            profile: 'broadL',
+            profile: 'calendar',
             args: {
                 url: { value: "https://www.google.com" },
                 // username: { value: "johndoe01" },

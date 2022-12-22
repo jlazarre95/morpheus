@@ -171,15 +171,15 @@ export class LrRequest implements LrScriptElement {
             str += `\t\tSEARCH_FILTERS,\n`;
             if(isDefined(matchedCorrelation.rule.scope)) {
                 str += this.stringifyArg("Scope", matchedCorrelation.rule.scope!.charAt(0).toUpperCase() + matchedCorrelation.rule.scope!.substring(1));
-            } else if(isDefined(matchedCorrelation.rule.requestUrl)) {
-                str += this.stringifyArg("RequestUrl", matchedCorrelation.rule.requestUrl);
+            } else if(isDefined(matchedCorrelation.rule.url)) {
+                str += this.stringifyArg("RequestUrl", matchedCorrelation.rule.url);
             } 
         }
         return str;
     }
 
     private containsSearchFilters(matchedCorrelation: MatchedCorrelationRule): boolean {
-        return isDefined(matchedCorrelation.rule.scope) || isDefined(matchedCorrelation.rule.requestUrl);
+        return isDefined(matchedCorrelation.rule.scope) || isDefined(matchedCorrelation.rule.url);
     }
 
 }

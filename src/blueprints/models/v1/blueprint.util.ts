@@ -68,7 +68,7 @@ export async function resolveBlueprint(manifest: BlueprintV1Manifest, options: R
     }
     changeValue(manifest, reviver);
     const evaluatedManifest = manifest;
-    validateArgsResolved(stringify(evaluatedManifest, undefined));
+    validateArgsResolved(stringify(evaluatedManifest));
     return evaluatedManifest;
 }
 

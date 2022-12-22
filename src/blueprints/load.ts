@@ -4,6 +4,7 @@ import { version } from "moment";
 import { dirname, isAbsolute, join, resolve } from "path";
 import { parse as parseYaml } from "yaml";
 import { Dict } from "../types/dict";
+import { stringify } from "../util/serialization.util";
 import { validateInstance } from "../validation/class-validator.util";
 import { ArgValue } from "./args/args";
 import { BlueprintFile, BlueprintManifest } from "./models";
@@ -31,6 +32,7 @@ export async function loadBlueprint(path: string, options: LoadBlueprintFileOpti
     let manifest: BlueprintManifest;
     if(manifestFile.version === '1') {
         const manifestV1 = plainToInstance(BlueprintV1Manifest, manifestFile);
+        // console.log(stringify(manifestV1))
         const resolvedManifestV1 = !options.disableArgResolution ? await resolveBlueprint(manifestV1, { args: options.args, profile: options.profile }) : manifestV1;
         if(!options.disableValidation) {
             await validateInstance(resolvedManifestV1, { whitelist: true, forbidNonWhitelisted: true });

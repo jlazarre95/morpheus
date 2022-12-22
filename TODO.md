@@ -2,10 +2,9 @@
 
 ## Phase 1
 
+- test param replace ignore case
+- date param substitution with offset/workingDays?
 - assertions
-- think time in script (put in actions.json?)
-- logs in script (put in actions.json?)
-- date param substitution
 - support script metadata/header
 - cli
 
@@ -13,10 +12,10 @@
 
 - implement import
 - implement TS version
-- requestFilters
 - logic
 - command/action timeouts?
 - more validation
+- think time in script (put in actions.json?)
 
 ## Backlog
 - maintain consistency between simulation config (CLI vs blueprint)
@@ -31,3 +30,5 @@
 - if command
 - ignorecase for parameter substitution
 - think about blueprint logic (add dates, numbers, etc?)
+- logs in script (put in actions.json?)
+- original value in .prm

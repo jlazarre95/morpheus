@@ -3,10 +3,10 @@ import { appendFile, copyFile, mkdirp, writeFile } from "fs-extra";
 import { dirname, join } from "path";
 import { Dict } from "../../../types";
 import { RecordedAction } from "../../simulation";
-import { BlueprintExcludeHeader } from "../../models";
+import { BlueprintExcludeHeader, BlueprintRequestResponseFilter } from "../../models";
 import { Correlations, CorrelationScanContext } from "../correlation/correlation.util";
 import { MatchedCorrelationRule } from "../correlation/matched-correlation-rule";
-import { HarRequest, HarResponse } from "../har";
+import { Har, HarRequest, HarResponse } from "../har";
 import { Parameters } from "../parameter/parameter.util";
 import { ScriptType } from "../script-type";
 import { ScriptGenerationContext, ScriptGenerator } from "../script.service";
@@ -25,6 +25,7 @@ import { LrConfigFile } from "./models/lr-config-file";
 import { LrGlobalsFile } from "./models/lr-globals-file";
 import { LrCustomBodyFile } from "./models/lr-custom-body-file";
 import { getNumRecords } from "./util/lines.util";
+import { copyInstance } from "../../../util/serialization.util";
 
 export interface LrScriptGenerationContext extends ScriptGenerationContext {
     actionFile?: LrActionFile;
@@ -32,6 +33,7 @@ export interface LrScriptGenerationContext extends ScriptGenerationContext {
     excludedHeaders?: BlueprintExcludeHeader[];
     indexes?: Dict<number>;
     matches?: Dict<CorrelationScanContext>;
+    occurrences?: Map<BlueprintRequestResponseFilter, number>;
 }
 
 export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenerationContext> {
@@ -54,6 +56,7 @@ export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenera
         ctx.currTransactions = new Set<string>();
         ctx.indexes = {};
         ctx.matches = {};
+        ctx.occurrences = new Map<BlueprintRequestResponseFilter, number>();
         ctx.excludedHeaders = createExcludeHeaders(DEFAULT_EXCLUDED_HEADERS);
         ctx.excludedHeaders = ctx.excludedHeaders.concat(excludeHeaders);
     }
@@ -206,7 +209,7 @@ export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenera
     }
 
     private generateParentRequest(request: HarRequest, response: HarResponse, ctx: LrScriptGenerationContext) {
-        this.parameterize(request, ctx);
+        this.parameterize(request, response, ctx);
         const parentRequest: LrRequest = new LrRequest(request, response, ctx.currEntryIndex, ctx.excludedHeaders);
         this.scan(response, parentRequest, ctx);
         const requestGroup: LrRequestGroup = new LrRequestGroup(parentRequest);
@@ -214,7 +217,7 @@ export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenera
     }
 
     private generateChildRequest(request: HarRequest, response: HarResponse, ctx: LrScriptGenerationContext) {
-        this.parameterize(request, ctx);
+        this.parameterize(request, response, ctx);
         const childRequest: LrRequest = new LrRequest(request, response, ctx.currEntryIndex, ctx.excludedHeaders);
         this.scan(response, childRequest, ctx);
         if (childRequest.getMatchedCorrelations().length < 1) {
@@ -231,11 +234,12 @@ export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenera
         }
     }
 
-    private parameterize(request: HarRequest, ctx: LrScriptGenerationContext) {
-        Parameters.substitute(request, ctx.state.parameters,
-            { transactionNames: Array.from(ctx.currTransactions!) });
-        Correlations.substitute(request,
-            { matches: ctx.matches!, transactionNames: Array.from(ctx.currTransactions!) });
+    private parameterize(request: HarRequest, response: HarResponse, ctx: LrScriptGenerationContext) {
+        const actions: string[] = Array.from(ctx.currTransactions!);
+        const originalRequest: HarRequest = copyInstance(HarRequest, request);
+        const occurrences = ctx.occurrences;
+        Parameters.substitute(request, response, ctx.state.parameters, { originalRequest, actions, occurrences });
+        Correlations.substitute(request, response, { originalRequest, actions, occurrences, matches: ctx.matches! });
     }
 
     private scan(response: HarResponse, request: LrRequest, ctx: LrScriptGenerationContext): boolean {

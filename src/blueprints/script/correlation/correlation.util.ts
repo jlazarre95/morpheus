@@ -2,7 +2,7 @@
 import { isDefined } from "class-validator";
 import { Dict } from "../../../types";
 import { matchWildcardPattern } from "../../../util/string.util";
-import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintCorrelationType } from "../../models";
+import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintCorrelationType, BlueprintRequestResponseFilter } from "../../models";
 import { HarRequest, HarResponse, Har } from "../har";
 import { Substitutions } from "../substitution/substitution.util";
 import { MatchedCorrelationRule } from "./matched-correlation-rule";
@@ -10,7 +10,8 @@ import { MatchedCorrelationRule } from "./matched-correlation-rule";
 export interface SubstituteCorrelationsOptions {
     matches: Dict<CorrelationScanContext>;
     originalRequest?: HarRequest;
-    transactionNames?: string[];
+    actions?: string[];
+    occurrences?: Map<BlueprintRequestResponseFilter, number>;
 }
 
 export interface CorrelationScanContext {
@@ -31,9 +32,10 @@ export interface SearchResponseOptions {
 export namespace Correlations {
 
 
-    export function substitute(request: HarRequest, options: SubstituteCorrelationsOptions) {
+    export function substitute(request: HarRequest, response: HarResponse, options: SubstituteCorrelationsOptions) {
+        const { actions, originalRequest, occurrences } = options;
         for(const [paramValue, ctx] of Object.entries(options.matches)) {
-            Substitutions.substitute(request, ctx.paramName, paramValue, { originalRequest: options.originalRequest });
+            Substitutions.substitute(request, ctx.paramName, paramValue, { response, originalRequest, actions, filters: ctx.correlationRule.replaceFilters, occurrences  });
         }
     }
 
@@ -68,7 +70,7 @@ export namespace Correlations {
     export function searchResponse(response: HarResponse, rule: BlueprintCorrelation, options: SearchResponseOptions = {}): string[] {
         const matches: string[] = [];
         const url: string | undefined = options.request ? options.request.url : undefined;
-        if(matchWildcardPattern(url, rule.requestUrl)) {
+        if(matchWildcardPattern(url, rule.url)) {
             const headers: string = Har.headersToString(response.headers);
             const body: string = response.content.text;
             let string: string;

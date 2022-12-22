@@ -1,50 +1,53 @@
-import { replaceAll } from "../../../util/string.util";
-import { HarRequest, Har, HarHeader, HarPostDataParam } from "../har";
-import { RequestFilter } from "../request-filter";
-import { SubstitutionFilter, SubstitutionScope } from "./substitution";
+import { replaceAll, ReplaceAllOptions } from "../../../util/string.util";
+import { BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter } from "../../models";
+import { Har, HarHeader, HarPostDataParam, HarRequest, HarResponse } from "../har";
+import { RequestResponseFilter } from "../request-response-filter";
 
 export interface SubstituteOptions {
-    filters?: SubstitutionFilter[];
+    // filters?: SubstitutionFilter[];
+    response: HarResponse;
     originalRequest?: HarRequest;
+    actions?: string[];
+    filters?: BlueprintReplaceFilter[];
+    occurrences?: Map<BlueprintRequestResponseFilter, number>;
 }
 
 export namespace Substitutions {
 
-    export function substitute(request: HarRequest, paramName: string, paramValue: string, options: SubstituteOptions = {}) {
-        const originalRequest: HarRequest = options.originalRequest || request;
-        const filters: SubstitutionFilter[] = options.filters || [];
-        if(filters.length < 1) {
-            filters.push(new SubstitutionFilter());
-        }
-        
+    export function substitute(request: HarRequest, paramName: string, paramValue: string, options: SubstituteOptions) {
+        const { originalRequest = request, actions, response, filters = [], occurrences } = options;
         for(const filter of filters) {
-            const prefix: string = filter.leftBoundary || "";
-            const suffix: string = filter.rightBoundary || "";
+            const prefix: string = filter.boundary?.left?.boundary || "";
+            const suffix: string = filter.boundary?.right?.boundary || "";
             const key: string = `${prefix}${paramValue}${suffix}`;
             const value: string = `${prefix}{${paramName}}${suffix}`;
-            const scope: SubstitutionScope | undefined = filter.scope;
+            const scope: BlueprintReplaceFilterScope | undefined = filter.scope;
     
-            if(!filter.requestFilter || RequestFilter.match(originalRequest, filter.requestFilter)) {
+            const replaceAllOptions: ReplaceAllOptions = { ignoreCase: filter.ignoreCase };
+
+            if(!filter.requestResponse || RequestResponseFilter.match(originalRequest, response, filter.requestResponse, { actions, occurrences })) {
                 // Search the request if there is no request filter or the request filter matches.
-                if(!scope || scope === SubstitutionScope.ALL || scope === SubstitutionScope.URL) {
-                    request.url = replaceAll(request.url, key, value);
+                const all: boolean = !scope || scope === BlueprintReplaceFilterScope.all;
+                if(all || scope === BlueprintReplaceFilterScope.url) {
+                    request.url = replaceAll(request.url, key, value, replaceAllOptions);
                 }
-                if(!scope || scope === SubstitutionScope.ALL || scope === SubstitutionScope.HEADERS) {
-                    replaceAllInHeaders(request, key, value);
+                if(all || scope === BlueprintReplaceFilterScope.headers) {
+                    replaceAllInHeaders(request, key, value, replaceAllOptions);
                 }
-                if(!scope || scope === SubstitutionScope.ALL || scope === SubstitutionScope.BODY) {
-                    replaceAllInBody(request, key, value);
+                if(all || scope === BlueprintReplaceFilterScope.body) {
+                    replaceAllInBody(request, key, value, replaceAllOptions);
                 }
+                
             }
         }
     }
 
-    function replaceAllInHeaders(request: HarRequest, key: string, value: string) {
+    function replaceAllInHeaders(request: HarRequest, key: string, value: string, options: ReplaceAllOptions) {
         let str: string = Har.headersToString(request.headers);
         request.headers = [];
         if(str.length >= 1) {
             str = str.substring(1);
-            str = replaceAll(str, key, value);
+            str = replaceAll(str, key, value, options);
             for(const token of str.split("\n")) {
                 const index: number = token.indexOf(": ");
                 const headerName: string = token.substring(0, index);
@@ -58,22 +61,18 @@ export namespace Substitutions {
         }
     }
 
-    function replaceAllInBody(request: HarRequest, key: string, value: string) {
+    function replaceAllInBody(request: HarRequest, key: string, value: string, options: ReplaceAllOptions) {
         if(request.postData.text) {
-            request.postData.text = replaceAll(request.postData.text, key, value);
+            const body: string = request.getBody();
+            request.postData.text = replaceAll(body, key, value, options);
         } else if(request.postData.params) {
-            let str: string = "";
-            //console.log(request.postData.params);
-            for(const param of request.postData.params) {
-                str += `&${param.name}=${param.value}`;
-            }
+            let body: string = request.getBody();
             request.postData.params = [];
-            if(str.length >= 1) {
-                str = str.substring(1);
-                //console.log(str.split("&"));
-                str = replaceAll(str, key, value);
-                //console.log(str);
-                for(const token of str.split("&")) {
+            if(body.length >= 1) {
+                //console.log(body.split("&"));
+                body = replaceAll(body, key, value, options);
+                //console.log(body);
+                for(const token of body.split("&")) {
                     const index: number = token.indexOf("=");
                     const paramName: string = token.substring(0, index);
                     const paramValue: string = token.substring(index + 1);

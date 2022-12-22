@@ -1,6 +1,5 @@
 import { suite, test } from "@testdeck/mocha";
 import { join } from "path";
-import { stringify } from "../../../util/serialization.util";
 import { loadBlueprint } from "../../load";
 import { BlueprintManifest } from "../../models";
 import { ScriptType } from "../script-type";
@@ -14,7 +13,7 @@ interface ScriptMetadata {
     description?: string;
 }
 
-@suite.only
+@suite
 export class LoadRunnerScriptGeneratorTests {
 
     private scriptService: ScriptService;

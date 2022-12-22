@@ -3,8 +3,8 @@ blueprint:
   name: "Complex Blueprint"
   args:
     url: {}
-    company: "{{username}}'s Company'"
     username: "johndoe01"
+    company: "{{username}}'s Company'"
     password: "{{username}}-Password$1"
     waitTime: 2000
   simulation:
@@ -17,7 +17,7 @@ blueprint:
         commands:
           - wait: "{{waitTime}}"
           - goto: "http://path/to/url/"
-          - newPage: 
+          - newPage: {}
           - goto: "{{url}}"
       - name: "Action 2"
         commands:
