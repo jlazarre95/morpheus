@@ -1,19 +1,9 @@
 export function isInt(value: string): boolean {
-    try {
-        parseInt(value);
-        return true;
-    } catch(err) {
-        return false;
-    }
+    return !Number.isNaN(parseInt(value));
 }
 
 export function isFloat(value: string): boolean {
-    try {
-        parseFloat(value);
-        return true;
-    } catch(err) {
-        return false;
-    }
+    return !Number.isNaN(parseFloat(value));
 }
 
 export function isBetween(value: number, minMax: { min: number, max: number }): boolean {

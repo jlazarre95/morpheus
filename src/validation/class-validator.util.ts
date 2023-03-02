@@ -19,7 +19,7 @@ export function getValidationErrorMessage(errors: ValidationError[], options: IV
     const stk: IValidationErrorEntry[] = []; 
     for(let i = errors.length - 1; i >= 0; i--) {
         
-        console.log(stringify(errors[i]))
+        //console.log(stringify(errors[i]))
         const error: ValidationError = errors[i];
         stk.push({ 
             prefix: "$", 

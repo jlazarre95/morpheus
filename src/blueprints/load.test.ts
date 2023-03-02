@@ -11,7 +11,7 @@ export class loadTests {
         // console.log(JSON.stringify(manifest, null, 4));
     }
 
-    @test.only
+    @test
     async canLoadComplexBlueprint() {
         let manifest: BlueprintManifest = await loadBlueprint('test/fixtures/complex.blueprint.yaml', {
             profile: 'calendar',

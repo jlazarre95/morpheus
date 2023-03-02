@@ -99,9 +99,9 @@ export function TransformToBoolean() {
 export function TransformToInt() {
     return function (target: any, propertyKey: string) {
         // Transform(({ value }) => value)(target, propertyKey);
-        Transform(({ value }) => {
-            Transform(({ value }) => typeof value === 'string' && isInt(value) ? parseInt(value) : value)(target, propertyKey);
-        })(target, propertyKey);
+        // Transform(({ value }) => {
+        Transform(({ value }) => typeof value === 'string' && isInt(value) ? parseInt(value) : value)(target, propertyKey);
+        // })(target, propertyKey);
     };
 }
 

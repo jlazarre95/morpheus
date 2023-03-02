@@ -68,7 +68,7 @@ blueprint:
         text: "UKG Pro"
     files:
       - name: "Users"
-        sourcePath: "Calendar_Users.dat"
+        sourcePath: "data-files/Calendar_Users.dat"
         targetPath: "Calendar_Users.dat"
     parameters: 
       - name: "Username"
@@ -90,7 +90,9 @@ blueprint:
     # correlations:
     #   - name: "C_XSRF_TOKEN"
     #     boundary:
-    #       left: "XSRF_TOKEN="
+    #       left: 
+    #         boundary: "XSRF_TOKEN="
+    #         case: "{{ignoreCase}}"
     #       right: "\n"
     #     search: "headers"
     #   - import: "xsrf-token.correlation.yml"
@@ -115,7 +117,7 @@ blueprint:
             text: "UKG Pro"
         files:
           - name: "Users"
-            sourcePath: "Calendar_Users.dat"
+            sourcePath: "data-files/GSDB_Users.dat"
             targetPath: "Users.dat"
     serviceb:
       args:

@@ -1,11 +1,9 @@
-import { plainToInstance } from "class-transformer";
+import { instanceToInstance } from "class-transformer";
 import { isDefined } from "class-validator";
 import { Dict } from "../../../types";
 import { changeValue, stringify } from "../../../util/serialization.util";
-import { buildArgs, resolveString, validateArgsResolved, ArgDefinition, ArgValue } from "../../args";
-import { BlueprintV1Argument, BlueprintV1Blueprint, BlueprintV1Manifest, BlueprintV1Profile } from "./blueprint";
-import { BlueprintV1Selector, BlueprintV1XPath } from "./blueprint";
-
+import { ArgDefinition, ArgValue, buildArgs, resolveString, validateArgsResolved } from "../../args";
+import { BlueprintV1Argument, BlueprintV1Blueprint, BlueprintV1Manifest, BlueprintV1Profile, BlueprintV1Selector, BlueprintV1XPath } from "./blueprint";
 
 export function getBlueprintV1Selector(selector?: string | BlueprintV1Selector): BlueprintV1Selector | undefined {
     if(!selector) {
@@ -69,7 +67,10 @@ export async function resolveBlueprint(manifest: BlueprintV1Manifest, options: R
     changeValue(manifest, reviver);
     const evaluatedManifest = manifest;
     validateArgsResolved(stringify(evaluatedManifest));
-    return evaluatedManifest;
+
+    // Copy object to retrigger transformer decorators and convert resolved parameter values to their proper primitives such as
+    // numbers and booleans.
+    return instanceToInstance(evaluatedManifest); 
 }
 
 
