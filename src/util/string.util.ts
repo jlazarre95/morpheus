@@ -178,3 +178,7 @@ export function matchWildcardPattern(str: string | undefined, pattern: string | 
 
     return lookup[m][n];
 }
+
+export function numOccurrences(string: string, substring: string | RegExp): number {
+    return string.split(substring).length - 1;
+}

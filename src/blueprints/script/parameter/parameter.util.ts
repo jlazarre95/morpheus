@@ -16,7 +16,7 @@ export namespace Parameters {
         for(const parameter of parameters) {
             if(parameter.replace) {
                 for(const r of parameter.replace) {
-                    Substitutions.substitute(request, parameter.name, r.text!, { response, originalRequest, actions, occurrences, filters: r.filters });
+                    Substitutions.substitute(request, parameter.name, r.text!, { response, originalRequest, actions, occurrences, filters: r.filters, ignoreCase: r.ignoreCase });
                 }
             }
         }

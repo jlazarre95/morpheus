@@ -41,19 +41,6 @@ export class HarRequest {
     cookies: HarCookie[];
     queryString: HarQueryString;
     postData: HarPostData;
-
-    getBody(): string {
-        if (this.postData.text) {
-            return this.postData.text;
-        } else if(this.postData.params) {
-            let str: string = '';
-            for (const param of this.postData.params) {
-                str += `&${param.name}=${param.value}`;
-            }
-            return str.length >= 1 ? str.substring(1) : '';
-        }
-        return '';
-    }   
 }
 
 export class HarResponseContent {
@@ -70,9 +57,7 @@ export class HarResponse {
     content: HarResponseContent;
     redirectUrl: string;
 
-    getBody(): string {
-        return this.content?.text || '';
-    }
+
 }
 
 export class HarEntry {
@@ -118,4 +103,21 @@ export class Har {
         }
         return str;
     }
+
+    static getResponseBody(response: HarResponse): string {
+        return response.content?.text || '';
+    }
+
+    static getRequestBody(request: HarRequest): string {
+        if (request.postData.text) {
+            return request.postData.text;
+        } else if(request.postData.params) {
+            let str: string = '';
+            for (const param of request.postData.params) {
+                str += `&${param.name}=${param.value}`;
+            }
+            return str.length >= 1 ? str.substring(1) : '';
+        }
+        return '';
+    }   
 }

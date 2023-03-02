@@ -35,7 +35,7 @@ export namespace Correlations {
     export function substitute(request: HarRequest, response: HarResponse, options: SubstituteCorrelationsOptions) {
         const { actions, originalRequest, occurrences } = options;
         for(const [paramValue, ctx] of Object.entries(options.matches)) {
-            Substitutions.substitute(request, ctx.paramName, paramValue, { response, originalRequest, actions, filters: ctx.correlationRule.replaceFilters, occurrences  });
+            Substitutions.substitute(request, ctx.paramName, paramValue, { response, originalRequest, actions, filters: ctx.correlationRule.replaceFilters, occurrences });
         }
     }
 

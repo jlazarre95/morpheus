@@ -1,3 +1,4 @@
+import { isDefined } from "class-validator";
 import { replaceAll, ReplaceAllOptions } from "../../../util/string.util";
 import { BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter } from "../../models";
 import { Har, HarHeader, HarPostDataParam, HarRequest, HarResponse } from "../har";
@@ -8,6 +9,7 @@ export interface SubstituteOptions {
     response: HarResponse;
     originalRequest?: HarRequest;
     actions?: string[];
+    ignoreCase?: boolean;
     filters?: BlueprintReplaceFilter[];
     occurrences?: Map<BlueprintRequestResponseFilter, number>;
 }
@@ -15,15 +17,17 @@ export interface SubstituteOptions {
 export namespace Substitutions {
 
     export function substitute(request: HarRequest, paramName: string, paramValue: string, options: SubstituteOptions) {
-        const { originalRequest = request, actions, response, filters = [], occurrences } = options;
+        const { originalRequest = request, actions, response, filters = [], occurrences, ignoreCase } = options;
+        if(filters.length < 1) {
+            filters.push({});
+        }
         for(const filter of filters) {
             const prefix: string = filter.boundary?.left?.boundary || "";
             const suffix: string = filter.boundary?.right?.boundary || "";
             const key: string = `${prefix}${paramValue}${suffix}`;
             const value: string = `${prefix}{${paramName}}${suffix}`;
             const scope: BlueprintReplaceFilterScope | undefined = filter.scope;
-    
-            const replaceAllOptions: ReplaceAllOptions = { ignoreCase: filter.ignoreCase };
+            const replaceAllOptions: ReplaceAllOptions = { ignoreCase: isDefined(filter.ignoreCase) ? filter.ignoreCase : ignoreCase };
 
             if(!filter.requestResponse || RequestResponseFilter.match(originalRequest, response, filter.requestResponse, { actions, occurrences })) {
                 // Search the request if there is no request filter or the request filter matches.
@@ -37,7 +41,6 @@ export namespace Substitutions {
                 if(all || scope === BlueprintReplaceFilterScope.body) {
                     replaceAllInBody(request, key, value, replaceAllOptions);
                 }
-                
             }
         }
     }
@@ -63,10 +66,10 @@ export namespace Substitutions {
 
     function replaceAllInBody(request: HarRequest, key: string, value: string, options: ReplaceAllOptions) {
         if(request.postData.text) {
-            const body: string = request.getBody();
+            const body: string = Har.getRequestBody(request);
             request.postData.text = replaceAll(body, key, value, options);
         } else if(request.postData.params) {
-            let body: string = request.getBody();
+            let body: string = Har.getRequestBody(request);
             request.postData.params = [];
             if(body.length >= 1) {
                 //console.log(body.split("&"));

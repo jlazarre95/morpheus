@@ -95,11 +95,11 @@ blueprint:
       - name: "P_Url"
         replace: 
           - text: "D13UP08WB01.dev.us.corp"
-            ignoreCase: false
+            ignoreCase: true
       - name: "P_Username"
         replace: 
           - text: "{{username}}"
-            ignoreCase: true
+            ignoreCase: false
         file: "Users"
       - name: "P_Password"
         replace: "{{password}}"

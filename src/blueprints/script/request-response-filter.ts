@@ -69,10 +69,10 @@ export namespace RequestResponseFilter {
         const bodies: string[] = [];
         const all: boolean = !filter.target || filter.target == BlueprintRequestResponseFilterTarget.all;
         if(all || filter.target === BlueprintRequestResponseFilterTarget.request) {
-            bodies.push(request.getBody());
+            bodies.push(Har.getRequestBody(request));
         }
         if(all || filter.target === BlueprintRequestResponseFilterTarget.response) {
-            bodies.push(response.getBody());
+            bodies.push(Har.getResponseBody(response));
         }
         for(const body of bodies) {
             const matches: boolean = matchString(body, filter.body.body, filter.body.regex);
