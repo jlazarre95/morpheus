@@ -1,13 +1,12 @@
-import { Type, Transform, Exclude } from "class-transformer";
-import { IsNumber, Min, IsString, IsOptional, IsNotEmpty, ValidateNested, ArrayMinSize, IsBoolean, isNotEmpty, isDefined, IsIn, IsInstance, ValidateIf, IsNumberString, IsArray } from "class-validator";
-import { isRegExp } from "util/types";
-import { Range, getRanges, parseRange } from "../../../util";
-import { IsDefinedXor, IsTypeOf, IsOfType, Ensure, IsDefinedOr, IsGte } from "../../../validation";
+import { Exclude, Transform, Type } from "class-transformer";
+import { ArrayMinSize, IsBoolean, isDefined, IsIn, IsInstance, IsNotEmpty, isNotEmpty, IsNumber, IsOptional, IsString, Min, ValidateNested } from "class-validator";
+import { getRanges, parseRange, Range } from "../../../util";
+import { Ensure, IsDefinedOr, IsDefinedXor, IsGte, IsOfType, IsTypeOf } from "../../../validation";
 import { PressableKey, WaitUntilState } from "../../simulation";
 import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintHttpMethod, BlueprintManifest, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues, BlueprintProfile, BlueprintReplace, BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter, BlueprintRequestResponseFilterTarget } from "../blueprint";
 import { BlueprintCommandName } from "../blueprint-command-name";
 import { getBlueprintV1Selector } from "./blueprint.util";
-import { IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformToInt, IsBlueprintV1Profiles, TransformArray, TransformToArgs, TransformToBoolean, IsBlueprintV1Ranges, IsBlueprintV1Replace, IsBlueprintV1ReplaceFilters } from "./blueprint.validators";
+import { IsBlueprintV1Profiles, IsBlueprintV1Ranges, IsBlueprintV1Replace, IsBlueprintV1ReplaceFilters, IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformArray, TransformToArgs, TransformToBoolean, TransformToInt } from "./blueprint.validators";
 
 export class BlueprintV1BoundaryLeft {
     @IsString()
@@ -511,7 +510,7 @@ export class BlueprintV1ImportCommand {
 
     @ValidateNested({ each: true })
     @Type(() => BlueprintV1ImportRange)
-    @Transform(({ value }) => typeof value === 'string' ? [new BlueprintV1ImportRange(parseRange(value))] : value)
+    @Transform(({ value }) => typeof value === 'string' ? [BlueprintV1ImportRange.fromShorthand(value)] : value)
     @TransformArray(({ value }) => typeof value === 'string' ? BlueprintV1ImportRange.fromShorthand(value) : value)
     @ArrayMinSize(1)
     @IsOptional()
@@ -1869,5 +1868,13 @@ export class BlueprintV1ImportRange {
     constructor(from: number, to?: number) {
         this.from = from;
         this.to = to;
+    }
+
+    static fromShorthand(value: string): BlueprintV1ImportRange {
+        if(value.charAt(0) === "!") {
+            throw new Error('Exclude operator (!) is not supported with import ranges');
+        }
+        const range = parseRange(value);
+        return new BlueprintV1ImportRange(range.from, range.to);
     }
 }

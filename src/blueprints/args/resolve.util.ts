@@ -5,9 +5,9 @@ import { ArgDefinition, ArgValue } from "./args";
 
 export function resolveString(str: string, args: Dict<string | undefined>, pure: boolean = false): string {
     let modified: string = str;
-    for(const key of Object.keys(args)) {
-        let k: string = pure ? key: "{{" + key + "}}";
-        modified = modified.replace(new RegExp(k, "g"), args[key] ? args[key]! : "");
+    for(const argName of Object.keys(args)) {
+        const key: string = pure ? argName: "{{" + argName + "}}";
+        modified = modified.replace(new RegExp(key, "g"), args[argName] ? args[argName]! : "");
     }
     return modified;
 }

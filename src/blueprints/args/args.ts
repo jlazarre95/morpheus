@@ -5,4 +5,5 @@ export class ArgDefinition {
 
 export class ArgValue {
     value?: string;
+    type?: 'string' | 'number' | 'boolean';
 }
