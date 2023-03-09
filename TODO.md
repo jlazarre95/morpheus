@@ -2,7 +2,7 @@
 
 ## Phase 1
 
-- test param replace ignore case
+- test action.c for exclude urls and exclude headers
 - date param substitution with offset/workingDays?
 - assertions
 - support script metadata/header
