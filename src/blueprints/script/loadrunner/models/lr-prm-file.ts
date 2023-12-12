@@ -1,7 +1,7 @@
 import { isDefined } from "class-validator";
 import { Dict } from "../../../../types";
 import { Stringifyable } from "../../../../types/stringifyable";
-import { BlueprintFile, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterType, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues } from "../../../models";
+import { BlueprintDuration, BlueprintFile, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterType, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues } from "../../../models";
 
 export interface LrPrmFileOptions {
     parameters: BlueprintParameter[];
@@ -65,8 +65,8 @@ value_for_each_vuser="1"\n`;
     private getDate(p: BlueprintParameter): string {
         const generateNewVal: string = this.getGenerateNewVal(p.updateValueOn);
         const format: string = p.date!.format;
-        const offset: number = isDefined(p.date!.offset) ? p.date!.offset! : 0;
-        const workingDaysOn: string = p.date!.workingDays ? '1' : '0';
+        const offset: number = isDefined(p.date!.offset) ? BlueprintDuration.toSeconds(p.date!.offset!) : 0;
+        const workingDaysOn: string = '0';
         return `[parameter:${p.name}]
 Format="${format}"
 GenerateNewVal="${generateNewVal}"

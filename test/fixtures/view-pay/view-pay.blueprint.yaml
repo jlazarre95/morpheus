@@ -91,6 +91,8 @@ blueprint:
           - click: "#unified-nav-header-user-account-menu-button"
           - click: "#ukg-menu-hdr_logout"
   script:
+    assertions:
+      - text: "Human Resources"
     parameters:
       - name: "P_Url"
         replace: 
@@ -104,11 +106,21 @@ blueprint:
       - name: "P_Password"
         replace: "{{password}}"
         file: "Users"
-      - name: "P_Date"
+      - name: "P_Date_1"
+        replace: 
+          - date: "M/D/YY"
+        date: 
+          format: "%D"
+          offset: 
+            amount: -953
+            unit: days
+      - name: "P_Date_2"
         replace: "9/1/20"
         date: 
           format: "%D"
-          offset: 86400
+          offset: 
+            amount: 1
+            unit: day
     correlations:
       - name: "C_ViewState"
         boundary:

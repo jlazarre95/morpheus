@@ -3,7 +3,7 @@ import { appendFile, copyFile, mkdirp, writeFile } from "fs-extra";
 import { dirname, join } from "path";
 import { Dict } from "../../../types";
 import { RecordedAction } from "../../simulation";
-import { BlueprintExcludeHeader, BlueprintRequestResponseFilter } from "../../models";
+import { BlueprintAssertion, BlueprintExcludeHeader, BlueprintRequestResponseFilter } from "../../models";
 import { Correlations, CorrelationScanContext } from "../correlation/correlation.util";
 import { MatchedCorrelationRule } from "../correlation/matched-correlation-rule";
 import { Har, HarRequest, HarResponse } from "../har";
@@ -34,6 +34,7 @@ export interface LrScriptGenerationContext extends ScriptGenerationContext {
     indexes?: Dict<number>;
     matches?: Dict<CorrelationScanContext>;
     occurrences?: Map<BlueprintRequestResponseFilter, number>;
+    assertionMatches?: Map<BlueprintAssertion, number>;
 }
 
 export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenerationContext> {
@@ -57,8 +58,8 @@ export class LoadRunnerScriptGenerator implements ScriptGenerator<LrScriptGenera
         ctx.indexes = {};
         ctx.matches = {};
         ctx.occurrences = new Map<BlueprintRequestResponseFilter, number>();
-        ctx.excludedHeaders = createExcludeHeaders(DEFAULT_EXCLUDED_HEADERS);
-        ctx.excludedHeaders = ctx.excludedHeaders.concat(excludeHeaders);
+        ctx.assertionMatches = new Map<BlueprintAssertion, number>();
+        ctx.excludedHeaders = createExcludeHeaders(DEFAULT_EXCLUDED_HEADERS).concat(excludeHeaders);
     }
 
     async onStartAction(action: RecordedAction, ctx: LrScriptGenerationContext): Promise<void> {

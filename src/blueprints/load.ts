@@ -33,6 +33,7 @@ export async function loadBlueprint(path: string, options: LoadBlueprintFileOpti
     if(manifestFile.version === '1') {
         const manifestV1 = plainToInstance(BlueprintV1Manifest, manifestFile);
         const resolvedManifestV1 = !options.disableArgResolution ? await resolveBlueprint(manifestV1, { args: options.args, profile: options.profile }) : manifestV1;
+        // console.log(stringify(resolvedManifestV1))
         if(!options.disableValidation) {
             await validateInstance(resolvedManifestV1, { whitelist: true, forbidNonWhitelisted: true });
         }

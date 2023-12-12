@@ -1,5 +1,5 @@
 import moment from "moment";
-import { BlueprintParameter, BlueprintRequestResponseFilter } from "../../models";
+import { BlueprintTimeUnit, BlueprintParameter, BlueprintRequestResponseFilter, BlueprintDuration } from "../../models";
 import { HarRequest, HarResponse } from "../har";
 import { Substitutions } from "../substitution/substitution.util";
 
@@ -27,8 +27,12 @@ export namespace Parameters {
             if(parameter.date && parameter.replace) {
                 for(const r of parameter.replace) {
                     if(r.date) {
-                        const dateString = moment(date).format(r.date.format);
-                        r.text = dateString;
+                        const format: string = r.date.format;
+                        const offset: BlueprintDuration | undefined = parameter.date.offset;
+                        const offsetDate = getOffsetDate(date, offset);
+                        r.text = moment(offsetDate).format(format);
+                        // const dateString = moment(date).format(format);
+
                         // if(r.date.date) {
                         //     const momentDate = moment(r.date.date, r.date.format);
                         //     if(!momentDate.isValid()) {
@@ -43,6 +47,33 @@ export namespace Parameters {
                     }
                 }
             }
+        }
+    }
+
+    export function getOffsetDate(date: Date, offset?: BlueprintDuration): Date { 
+        return !offset ? date : moment(date).add(offset.amount, getMomentTimeUnit(offset.unit)).toDate();
+    }
+
+    export function getMomentTimeUnit(unit: BlueprintTimeUnit): moment.unitOfTime.DurationConstructor {
+        switch(unit) {
+            case BlueprintTimeUnit.milliseconds:
+                return "milliseconds";
+            case BlueprintTimeUnit.seconds:
+                return "seconds";
+            case BlueprintTimeUnit.minutes:
+                return "minutes";
+            case BlueprintTimeUnit.hours:
+                return "hours";
+            case BlueprintTimeUnit.days:
+                return "days";
+            case BlueprintTimeUnit.weeks:
+                return "weeks";
+            case BlueprintTimeUnit.months:
+                return "months";
+            case BlueprintTimeUnit.years:
+                return "years";
+            default:
+                return "seconds";
         }
     }
 

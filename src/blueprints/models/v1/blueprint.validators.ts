@@ -2,9 +2,10 @@ import { Transform, Type, TransformFnParams, TransformOptions } from "class-tran
 import { IsNumber, Min, IsOptional, IsString, ValidateNested, IsNotEmpty, Validate, IsArray } from "class-validator";
 import { transformToBlueprintV1Arguments } from ".";
 import { isFloat, isInt } from "../../../validation/validation.util";
-import { BlueprintV1Range, BlueprintV1Replace, BlueprintV1ReplaceFilter, BlueprintV1Selector, BlueprintV1XPath } from "./blueprint";
+import { BlueprintV1TimeUnit, BlueprintV1Range, BlueprintV1Replace, BlueprintV1ReplaceFilter, BlueprintV1Selector, BlueprintV1XPath, BlueprintV1Duration } from "./blueprint";
 import { boolean, isBooleanable } from 'boolean';
 import { parseRange } from "../../../util";
+import { Dict } from "../../../types";
 
 export function IsBlueprintV1WaitForTimeout() {
     return function (target: any, propertyKey: string) {
@@ -114,5 +115,63 @@ export function TransformToFloat() {
 export function TransformToArgs() {
     return function (target: any, propertyKey: string) {
         Transform(({ value }) => transformToBlueprintV1Arguments(value))(target, propertyKey);
+    };
+}
+
+export function TransformLookup(dict: Dict<any>) {
+    return function (target: any, propertyKey: string) {
+        Transform(({ value }) => dict[value] || value)(target, propertyKey);
+    };
+}
+
+export function TransformToTimeUnit() {
+    return function (target: any, propertyKey: string) {
+        TransformLookup({
+            'ms': BlueprintV1TimeUnit.milliseconds,
+            'millisec': BlueprintV1TimeUnit.milliseconds,
+            'millisecs': BlueprintV1TimeUnit.milliseconds,
+            'millisecond': BlueprintV1TimeUnit.milliseconds,
+            'milliseconds': BlueprintV1TimeUnit.milliseconds,
+            's': BlueprintV1TimeUnit.seconds,
+            'sec': BlueprintV1TimeUnit.seconds,
+            'secs': BlueprintV1TimeUnit.seconds,
+            'second': BlueprintV1TimeUnit.seconds,
+            'seconds': BlueprintV1TimeUnit.seconds,
+            'm': BlueprintV1TimeUnit.minutes,
+            'min': BlueprintV1TimeUnit.minutes,
+            'minute': BlueprintV1TimeUnit.minutes,
+            'minutes': BlueprintV1TimeUnit.minutes,
+            'h': BlueprintV1TimeUnit.hours,
+            'hr': BlueprintV1TimeUnit.hours,
+            'hrs': BlueprintV1TimeUnit.hours,
+            'hour': BlueprintV1TimeUnit.hours,
+            'hours': BlueprintV1TimeUnit.hours,
+            'd': BlueprintV1TimeUnit.days,
+            'day': BlueprintV1TimeUnit.days,
+            'days': BlueprintV1TimeUnit.days,
+            'w': BlueprintV1TimeUnit.weeks,
+            'wk': BlueprintV1TimeUnit.weeks,
+            'wks': BlueprintV1TimeUnit.weeks,
+            'week': BlueprintV1TimeUnit.weeks,
+            'weeks': BlueprintV1TimeUnit.weeks,
+            'M': BlueprintV1TimeUnit.months,
+            'mth': BlueprintV1TimeUnit.months,
+            'mths': BlueprintV1TimeUnit.months,
+            'month': BlueprintV1TimeUnit.months,
+            'months': BlueprintV1TimeUnit.months,
+            'y': BlueprintV1TimeUnit.years,
+            'yr': BlueprintV1TimeUnit.years,
+            'yrs': BlueprintV1TimeUnit.years,
+            'year': BlueprintV1TimeUnit.years,
+            'years': BlueprintV1TimeUnit.years,
+        })(target, propertyKey);
+    };
+}
+
+export function IsBlueprintV1Duration() {
+    return function (target: any, propertyKey: string) {
+        ValidateNested()(target, propertyKey);
+        Type(() => BlueprintV1Duration)(target, propertyKey);
+        Transform(({ value }) => typeof value === 'number' ? new BlueprintV1Duration(value) : value)(target, propertyKey);
     };
 }

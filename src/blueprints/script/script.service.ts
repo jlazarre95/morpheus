@@ -96,7 +96,7 @@ export class ScriptService {
         }
 
         const parameters: BlueprintParameter[] = options.manifest ? getParameters(options.manifest, options.profile) : [];
-        Parameters.setDates(parameters, new Date());
+        Parameters.setDates(parameters, options.date || new Date());
 
         await this.printScriptHeader(name, options);
         await this.generateScript(generator, await Har.loadHarFile(harPath), {

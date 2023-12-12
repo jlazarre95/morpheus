@@ -10,6 +10,7 @@ import { assert } from "chai";
 import { pathExistsSync } from "fs-extra";
 import { readFileSync } from "fs";
 import { numOccurrences } from "../../../util/string.util";
+import moment from "moment";
 
 // interface ScriptMetadata {
 //     creatorName?: string;
@@ -41,7 +42,8 @@ export class LoadRunnerScriptGeneratorTests {
             actionsPath: './test/fixtures/view-pay/view-pay-actions.json',
             outputDir: this.outputDir,
             manifest: manifest,
-            profile: 'serviceb'
+            profile: 'serviceb',
+            date: moment().month(2).date(12).year(2023).toDate() // March 12, 2023
         });
 
         const expectedPaths = [
@@ -61,66 +63,89 @@ export class LoadRunnerScriptGeneratorTests {
         }
 
         const actionFile = readFileSync(join('tmp', 'view-pay', 'Action.c')).toString();
-        this.assertPatternCount(actionFile, `lr_start_transaction("VP_01_HitServer");`, 1);
-        this.assertPatternCount(actionFile, `lr_start_transaction("VP_02_Login");`, 1);
-        this.assertPatternCount(actionFile, `lr_start_transaction("VP_03_ViewPayCheck");`, 1);
-        this.assertPatternCount(actionFile, `lr_start_transaction("VP_04_Logout");`, 1);
-        this.assertPatternCount(actionFile, `lr_end_transaction("VP_01_HitServer", LR_AUTO)`, 1);
-        this.assertPatternCount(actionFile, `lr_end_transaction("VP_02_Login", LR_AUTO)`, 1);
-        this.assertPatternCount(actionFile, `lr_end_transaction("VP_03_ViewPayCheck", LR_AUTO)`, 1);
-        this.assertPatternCount(actionFile, `lr_end_transaction("VP_04_Logout", LR_AUTO)`, 1);
 
+        // Check transactions
+        this.assertPattern(actionFile, `lr_start_transaction("VP_01_HitServer");`, 1);
+        this.assertPattern(actionFile, `lr_start_transaction("VP_02_Login");`, 1);
+        this.assertPattern(actionFile, `lr_start_transaction("VP_03_ViewPayCheck");`, 1);
+        this.assertPattern(actionFile, `lr_start_transaction("VP_04_Logout");`, 1);
+        this.assertPattern(actionFile, `lr_end_transaction("VP_01_HitServer", LR_AUTO)`, 1);
+        this.assertPattern(actionFile, `lr_end_transaction("VP_02_Login", LR_AUTO)`, 1);
+        this.assertPattern(actionFile, `lr_end_transaction("VP_03_ViewPayCheck", LR_AUTO)`, 1);
+        this.assertPattern(actionFile, `lr_end_transaction("VP_04_Logout", LR_AUTO)`, 1);
+
+        // Check parameters
         this.assertPattern(actionFile, "{P_Url}");
-        this.assertPatternCount(actionFile, "{P_Username}", 1);
-        this.assertPatternCount(actionFile, "{P_Password}", 1);
-        this.assertPatternCount(actionFile, "{C_ViewState_1}", 1);
-        this.assertPatternCount(actionFile, "{C_ViewStateGen_1}", 1);
-        this.assertPatternCount(actionFile, "{C_EventValidation_1}", 1);
+        this.assertPattern(actionFile, "{P_Username}", 1);
+        this.assertPattern(actionFile, "{P_Password}", 1);
+        this.assertPattern(actionFile, "{P_Date_1}", 1);
+        this.assertPattern(actionFile, "{P_Date_2}", 1);
+        this.assertPattern(actionFile, "{C_ViewState_1}", 1);
+        this.assertPattern(actionFile, "{C_ViewStateGen_1}", 1);
+        this.assertPattern(actionFile, "{C_EventValidation_1}", 1);
 
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_1",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_2",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_3",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_4",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_5",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_6",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_7",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_8",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_9",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_1",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_2",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_3",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_4",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_5",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_6",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_7",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_8",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_9",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_1",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_2",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_3",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_4",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_5",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_6",`), 1);
-        this.assertPatternCount(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_7",`), 1);
+        // Check web_reg_save_params
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_1",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_2",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_3",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_4",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_5",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_6",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_7",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_8",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewState_9",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_1",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_2",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_3",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_4",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_5",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_6",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_7",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_8",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_ViewStateGen_9",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_1",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_2",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_3",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_4",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_5",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_6",`), 1);
+        this.assertPattern(actionFile, new RegExp(`web_reg_save_param_ex\\(\\s+"ParamName=C_EventValidation_7",`), 1);
 
-        this.assertPatternCount(actionFile, `web_convert_param("C_ViewState_1", "SourceEncoding=HTML", "TargetEncoding=URL", LAST);`, 1);
-        this.assertPatternCount(actionFile, `web_convert_param("C_ViewStateGen_1", "SourceEncoding=HTML", "TargetEncoding=URL", LAST);`, 1);
-        this.assertPatternCount(actionFile, `C_EventValidation_1", "SourceEncoding=HTML", "TargetEncoding=URL`, 1);
+        // Check web_convert_params
+        this.assertPattern(actionFile, `web_convert_param("C_ViewState_1", "SourceEncoding=HTML", "TargetEncoding=URL", LAST);`, 1);
+        this.assertPattern(actionFile, `web_convert_param("C_ViewStateGen_1", "SourceEncoding=HTML", "TargetEncoding=URL", LAST);`, 1);
+        this.assertPattern(actionFile, `web_convert_param("C_EventValidation_1", "SourceEncoding=HTML", "TargetEncoding=URL`, 1);
 
-        this.assertPatternCount(actionFile, `// APPLY RULE: {"type":"correlation",`, 25);
+        // Check comments and other LR calls
+        this.assertPattern(actionFile, `// APPLY RULE: {"type":"correlation",`, 25);
         this.assertPattern(actionFile, new RegExp(`lr_think_time\\(\\d+\\);`));
         this.assertPattern(actionFile, `web_add_header("`);
         this.assertPattern(actionFile, `web_custom_request("`);
+        this.assertPattern(actionFile, `web_concurrent_start(NULL);`);
+        this.assertPattern(actionFile, `web_concurrent_end(NULL);`);
+
+        // Check excluded headers
+        this.assertPattern(actionFile, 'Sec-Fetch-', 0);
+
+        // Check excluded URLs
+        this.assertPattern(actionFile, 'gvt.com', 0);
+        this.assertPattern(actionFile, 'google.com', 0);
+        this.assertPattern(actionFile, 'gstatic.com', 0);
+        this.assertPattern(actionFile, 'mozilla.com', 0);
+        this.assertPattern(actionFile, 'ocsp.digicert.com', 0);
+        this.assertPattern(actionFile, 'googleapis.com', 0);
+        this.assertPattern(actionFile, 'googleapi.com', 0);
+        this.assertPattern(actionFile, 'app.pendo.io', 0);
     }
 
-    private assertPattern(text: string, pattern: string | RegExp) {
-        const actualOccurrences = numOccurrences(text, pattern);
-        assert.isAtLeast(actualOccurrences, 1, `Found pattern ${actualOccurrences} time(s), but it was expected at least 1 time(s): ${pattern}`);
-    }
-
-    private assertPatternCount(text: string, pattern: string | RegExp, expectedOcurrences: number) {
-        const actualOccurrences = numOccurrences(text, pattern);
-        assert.strictEqual(actualOccurrences, expectedOcurrences, `Found pattern ${actualOccurrences} time(s), but it was expected ${expectedOcurrences} time(s): ${pattern}`);
+    private assertPattern(text: string, pattern: string | RegExp, expectedOcurrences?: number) {
+        if(expectedOcurrences !== undefined) {
+            const actualOccurrences = numOccurrences(text, pattern);
+            assert.strictEqual(actualOccurrences, expectedOcurrences, `Found pattern ${actualOccurrences} time(s), but it was expected ${expectedOcurrences} time(s): ${pattern}`);    
+        } else {
+            const actualOccurrences = numOccurrences(text, pattern);
+            assert.isAtLeast(actualOccurrences, 1, `Found pattern ${actualOccurrences} time(s), but it was expected at least 1 time(s): ${pattern}`);
+        }
     }
 
 }

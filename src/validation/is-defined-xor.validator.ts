@@ -1,5 +1,9 @@
 import { registerDecorator, ValidationOptions, ValidationArguments, isDefined } from 'class-validator';
 
+function propertyName() {
+
+}
+
 export function IsDefinedXor(names: string[], validationOptions?: ValidationOptions) {
   return function (object: Object, propertyName: string) {
     registerDecorator({
@@ -11,7 +15,8 @@ export function IsDefinedXor(names: string[], validationOptions?: ValidationOpti
       validator: {
         validate(value: any, args: ValidationArguments) {
           const properties: string[] = [value].concat(args.constraints);
-          const keys: string[] = Object.keys(args.object);
+          // Get all keys that have defined values.
+          const keys: string[] = Object.entries(args.object).filter(([k, v]) => isDefined(v)).map(([k,v]) => k);
           let alreadyDefined: boolean = false;
           for(const property of properties) {
             if(keys.indexOf(property) >= 0) {

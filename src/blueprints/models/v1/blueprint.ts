@@ -3,10 +3,10 @@ import { ArrayMinSize, IsBoolean, isDefined, IsIn, IsInstance, IsNotEmpty, isNot
 import { getRanges, parseRange, Range } from "../../../util";
 import { Ensure, IsDefinedOr, IsDefinedXor, IsGte, IsOfType, IsTypeOf } from "../../../validation";
 import { PressableKey, WaitUntilState } from "../../simulation";
-import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintHttpMethod, BlueprintManifest, BlueprintParameter, BlueprintParameterSelectNextRow, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues, BlueprintProfile, BlueprintReplace, BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter, BlueprintRequestResponseFilterTarget } from "../blueprint";
+import { BlueprintCorrelation, BlueprintCorrelationScope, BlueprintTimeUnit, BlueprintHttpMethod, BlueprintManifest, BlueprintParameter, BlueprintParameterDate, BlueprintParameterSelectNextRow, BlueprintParameterUpdateValueOn, BlueprintParameterWhenOutOfValues, BlueprintProfile, BlueprintReplace, BlueprintReplaceFilter, BlueprintReplaceFilterScope, BlueprintRequestResponseFilter, BlueprintRequestResponseFilterTarget, BlueprintDuration } from "../blueprint";
 import { BlueprintCommandName } from "../blueprint-command-name";
 import { getBlueprintV1Selector } from "./blueprint.util";
-import { IsBlueprintV1Profiles, IsBlueprintV1Ranges, IsBlueprintV1Replace, IsBlueprintV1ReplaceFilters, IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformArray, TransformToArgs, TransformToBoolean, TransformToInt } from "./blueprint.validators";
+import { IsBlueprintV1Profiles, IsBlueprintV1Ranges, IsBlueprintV1Replace, IsBlueprintV1ReplaceFilters, IsBlueprintV1Selector, IsBlueprintV1WaitForTimeout, IsBlueprintV1WaitForWaitUntil, TransformArray, TransformToTimeUnit, TransformLookup, TransformToArgs, TransformToBoolean, TransformToInt, IsBlueprintV1Duration } from "./blueprint.validators";
 
 export class BlueprintV1BoundaryLeft {
     @IsString()
@@ -1537,23 +1537,83 @@ export class BlueprintV1ParameterFile {
     }
 }
 
+export enum BlueprintV1TimeUnit {
+    milliseconds = 'milliseconds',
+    seconds = 'seconds',
+    minutes = 'minutes',
+    hours = 'hours',
+    days = 'days',
+    weeks = 'weeks',
+    months = 'months',
+    years = 'years'
+}
+
+export class BlueprintV1Duration {
+    @IsNumber()
+    @TransformToInt()
+    @IsOptional()
+    amount: number;
+
+    @IsIn(Object.keys(BlueprintV1TimeUnit))
+    @IsString()
+    @TransformToTimeUnit()
+    @IsOptional()
+    unit?: BlueprintV1TimeUnit;
+
+    constructor(amount: number) {
+        this.amount = amount;
+        this.unit = BlueprintV1TimeUnit.days;
+    }
+
+    getTimeUnit(): BlueprintTimeUnit {
+        switch(this.unit) {
+            case BlueprintV1TimeUnit.milliseconds:
+                return BlueprintTimeUnit.milliseconds;
+            case BlueprintV1TimeUnit.seconds:
+                return BlueprintTimeUnit.seconds;
+            case BlueprintV1TimeUnit.minutes:
+                return BlueprintTimeUnit.minutes;
+            case BlueprintV1TimeUnit.hours:
+                return BlueprintTimeUnit.hours;
+            case BlueprintV1TimeUnit.days:
+                return BlueprintTimeUnit.days;
+            case BlueprintV1TimeUnit.weeks:
+                return BlueprintTimeUnit.weeks;
+            case BlueprintV1TimeUnit.months:
+                return BlueprintTimeUnit.months;
+            case BlueprintV1TimeUnit.years:
+                return BlueprintTimeUnit.years;
+            default:
+                return BlueprintTimeUnit.days;
+        }
+    }
+
+    getDuration(): BlueprintDuration {
+        return {
+            amount: this.amount,
+            unit: this.getTimeUnit()
+        }
+    }
+}
+
 export class BlueprintV1ParameterDate {   
     @IsString() 
     // TODO: validate format
     format: string;
 
-    @IsNumber()
-    @TransformToInt()
+    @IsBlueprintV1Duration()
     @IsOptional()
-    offset?: number;
-
-    @IsBoolean()
-    @TransformToBoolean()
-    @IsOptional()
-    workingDays?: boolean;
+    offset?: BlueprintV1Duration;
 
     constructor(format: string) {
         this.format = format;
+    }
+
+    getDate(): BlueprintParameterDate {
+        return {
+            format: this.format,
+            offset: this.offset?.getDuration()
+        }
     }
 }
 
@@ -1630,7 +1690,7 @@ export class BlueprintV1Parameter {
         return {
             name: this.name,
             replace: this.replace?.map(r => r.getReplace()),
-            date: this.date,
+            date: this.date?.getDate(),
             file: this.file ? {
                 name: this.file!.name,
                 column: this.file!.column,

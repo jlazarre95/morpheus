@@ -2,8 +2,6 @@
 
 ## Phase 1
 
-- test action.c for exclude urls and exclude headers
-- date param substitution with offset/workingDays?
 - assertions
 - support script metadata/header
 - cli
@@ -12,6 +10,7 @@
 
 - implement import
 - implement TS version
+- implement request/response filter
 - logic
 - command/action timeouts?
 - more validation
@@ -32,3 +31,6 @@
 - think about blueprint logic (add dates, numbers, etc?)
 - logs in script (put in actions.json?)
 - original value in .prm
+
+## Won't Work On
+- workingDays/businessDays: too complex to implement

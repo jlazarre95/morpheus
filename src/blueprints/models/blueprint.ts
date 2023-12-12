@@ -237,10 +237,50 @@ export interface BlueprintParameterFile {
     whenOutOfValues?: BlueprintParameterWhenOutOfValues;
 }
 
+export enum BlueprintTimeUnit {
+    milliseconds = 'milliseconds',
+    seconds = 'seconds',
+    minutes = 'minutes',
+    hours = 'hours',
+    days = 'days',
+    weeks = 'weeks',
+    months = 'months',
+    years = 'years'
+}
+
+export namespace BlueprintDuration {
+    export function toSeconds(duration: BlueprintDuration) {
+        switch(duration.unit) {
+            case BlueprintTimeUnit.milliseconds:
+                return duration.amount / 1000;
+            case BlueprintTimeUnit.seconds:
+                return duration.amount;
+            case BlueprintTimeUnit.minutes:
+                return duration.amount * 60;
+            case BlueprintTimeUnit.hours:
+                return duration.amount * 60 * 60;
+            case BlueprintTimeUnit.days:
+                return duration.amount * 60 * 60 * 24;
+            case BlueprintTimeUnit.weeks:
+                return duration.amount * 60 * 60 * 24 * 7;
+            case BlueprintTimeUnit.months:
+                return duration.amount * 60 * 60 * 24 * 30;
+            case BlueprintTimeUnit.years:
+                return duration.amount * 60 * 60 * 24 * 30 * 12;
+            default:
+                throw new Error(`Unsupported time unit: ${duration.unit}`);
+        }
+    }
+}
+
+export interface BlueprintDuration {
+    amount: number;
+    unit: BlueprintTimeUnit;
+}
+
 export interface BlueprintParameterDate {    
     format: string;
-    offset?: number;
-    workingDays?: boolean;
+    offset?: BlueprintDuration;
 }
 
 export enum BlueprintParameterType {
