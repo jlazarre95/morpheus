@@ -2,28 +2,28 @@
 
 ```ts
 import { Browser, Page } from "puppeteer";
+import { Action, Arg, PuppeteerSimulation, Simulation } from "morpheus";
 
 @Simulation
-export class YahooSearchSimulation {
+export class YahooSearchSimulation extends PuppeterSimulation {
 
-  constructor(@Browser private browser: Browser, @Page private page: Page, @Arg private url: string, @Arg private query: string) {
-
-  }
+  @Arg url: string;
+  @Arg query: string;
 
   @Action
-  async goToSearchPage(url: string) {
+  async goToSearchPage() {
     await this.page.goto(url);
     await this.page.waitForNetworkIdle();  
     await this.page.screenshot({ path: "homepage.png" });
   }
 
   @Action
-  async searchForQuery(query: string) {
+  async searchForQuery() {
     const searchBox = await this.page.$("#ybar-sbq");
-    await searchBox!.type(query);
+    await searchBox.type(query);
     await this.page.screenshot({ path: "type.png" });
-    await searchBox!.press("Enter");
-    await new Promise(r => setTimeout(r, 5000));
+    await searchBox.press("Enter");
+    await this.think(5000);
     await this.page.screenshot({ path: "results.png" });
   }
 
